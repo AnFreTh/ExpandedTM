@@ -11,9 +11,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class ISIM(AbstractMetric):
     """
-    For each topic, draw several intruder words that are not from the same topic by first selecting some topics that are not the specific topic and
-    then selecting one word from each of those topics.
-    The intruder score for the topic is then calculated as the average cosine similarity of the intruder words and the top words.
+    A metric class to calculate the Intruder Similarity Metric (ISIM) for topics. This metric evaluates
+    the distinctiveness of topics by measuring the average cosine similarity between the top words of
+    a topic and randomly chosen intruder words from other topics. Lower scores suggest higher topic
+    distinctiveness.
+
+    Attributes:
+        n_intruders (int): The number of intruder words to draw for each topic.
+        n_words (int): The number of top words to consider for each topic.
+        corpus_dict (dict): A dictionary mapping each word in the corpus to its embedding.
+        embeddings (numpy.ndarray): The embeddings for the top words of the topics.
     """
 
     def __init__(
@@ -29,8 +36,20 @@ class ISIM(AbstractMetric):
         expansion_word_list=None,
     ):
         """
-        corpus_dict: dict that maps each word in the corpus to its embedding
-        n_words: number of top words to consider
+        Initializes the ISIM object with a dataset, number of intruders, number of words,
+        embedding model, and paths for storing embeddings.
+
+        Parameters:
+            dataset: The dataset to be used for ISIM calculation.
+            n_intruders (int, optional): The number of intruder words to draw for each topic. Defaults to 1.
+            n_words (int, optional): The number of top words to consider for each topic. Defaults to 10.
+            metric_embedder (SentenceTransformer, optional): The embedding model to use.
+                Defaults to SentenceTransformer("paraphrase-MiniLM-L6-v2").
+            emb_filename (str, optional): Filename to store embeddings. Defaults to None.
+            emb_path (str, optional): Path to store embeddings. Defaults to "Embeddings/".
+            expansion_path (str, optional): Path for expansion embeddings. Defaults to "Embeddings/".
+            expansion_filename (str, optional): Filename for expansion embeddings. Defaults to None.
+            expansion_word_list (list, optional): List of words for expansion. Defaults to None.
         """
 
         tw_emb = Embed_corpus(
@@ -55,7 +74,18 @@ class ISIM(AbstractMetric):
 
     def score_one_intr_per_topic(self, model_output, new_Embeddings=True):
         """
-        Calculate the score for each topic but only with one intruder word
+        Calculates the ISIM score for each topic individually using only one intruder word.
+
+        This method computes the ISIM score for each topic by averaging the cosine similarity
+        between one randomly chosen intruder word and the top words of that topic.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            numpy.ndarray: An array of ISIM scores for each topic with one intruder word.
         """
         if new_Embeddings:  # for this function, reuse embeddings per default
             self.embeddings = None
@@ -105,7 +135,18 @@ class ISIM(AbstractMetric):
 
     def score_one_intr(self, model_output, new_Embeddings=True):
         """
-        Calculate the score for all topics combined but only with one intruder word
+        Calculates the overall ISIM score for all topics combined using only one intruder word.
+
+        This method computes the overall ISIM score by averaging the ISIM scores obtained
+        from each topic using one randomly chosen intruder word.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            float: The overall ISIM score for all topics with one intruder word.
         """
         if new_Embeddings:
             self.embeddings = None
@@ -113,7 +154,18 @@ class ISIM(AbstractMetric):
 
     def score_per_topic(self, model_output, new_Embeddings=True):
         """
-        Calculate the score for each topic with several intruder words
+        Calculates the ISIM scores for each topic individually using several intruder words.
+
+        This method computes the ISIM score for each topic by averaging the cosine similarity
+        between multiple randomly chosen intruder words and the top words of that topic.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            numpy.ndarray: An array of ISIM scores for each topic with several intruder words.
         """
         if new_Embeddings:
             self.embeddings = None
@@ -132,6 +184,20 @@ class ISIM(AbstractMetric):
         return np.mean(res, axis=1)  # return the mean score for each topic
 
     def score(self, model_output, new_Embeddings=True):
+        """
+        Calculates the overall ISIM score for all topics combined using several intruder words.
+
+        This method computes the overall ISIM score by averaging the ISIM scores obtained
+        from each topic using multiple randomly chosen intruder words.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            float: The overall ISIM score for all topics with several intruder words.
+        """
         if new_Embeddings:
             self.embeddings = None
         """
@@ -142,10 +208,16 @@ class ISIM(AbstractMetric):
 
 class INT(AbstractMetric):
     """
-    For each topic, draw several intruder words that are not from the same topic by first selecting some topics that are not the specific topic and
-    then selecting one word from each of those topics.
-    The embedding intruder cosine similarity accuracy for one intruder word is then calculated by the fraction of top words
-    that are least similar to the intruder
+    A metric class to calculate the Intruder Topic Metric (INT) for topics. This metric assesses the distinctiveness
+    of topics by calculating the embedding intruder cosine similarity accuracy. It involves selecting intruder words
+    from different topics and then measuring the accuracy by which the top words of a topic are least similar to these
+    intruder words. Higher scores suggest better topic distinctiveness.
+
+    Attributes:
+        n_intruders (int): The number of intruder words to draw for each topic.
+        n_words (int): The number of top words to consider for each topic.
+        corpus_dict (dict): A dictionary mapping each word in the corpus to its embedding.
+        embeddings (numpy.ndarray): The embeddings for the top words of the topics.
     """
 
     def __init__(
@@ -161,8 +233,20 @@ class INT(AbstractMetric):
         n_words=10,
     ):
         """
-        corpus_dict: dict that maps each word in the corpus to its embedding
-        n_words: number of top words to consider
+        Initializes the INT object with a dataset, number of intruders, number of words,
+        embedding model, and paths for storing embeddings.
+
+        Parameters:
+            dataset: The dataset to be used for INT calculation.
+            metric_embedder (SentenceTransformer, optional): The embedding model to use.
+                Defaults to SentenceTransformer("paraphrase-MiniLM-L6-v2").
+            emb_filename (str, optional): Filename to store embeddings. Defaults to None.
+            emb_path (str, optional): Path to store embeddings. Defaults to "Embeddings/".
+            expansion_path (str, optional): Path for expansion embeddings. Defaults to "Embeddings/".
+            expansion_filename (str, optional): Filename for expansion embeddings. Defaults to None.
+            expansion_word_list (list, optional): List of words for expansion. Defaults to None.
+            n_intruders (int, optional): The number of intruder words to draw for each topic. Defaults to 1.
+            n_words (int, optional): The number of top words to consider for each topic. Defaults to 10.
         """
 
         tw_emb = Embed_corpus(
@@ -187,7 +271,18 @@ class INT(AbstractMetric):
 
     def score_one_intr_per_topic(self, model_output, new_Embeddings=True):
         """
-        Calculate the score for each topic but only with one intruder word
+        Calculates the INT score for each topic individually using only one intruder word.
+
+        This method computes the INT score for each topic by measuring the accuracy with which
+        the top words of the topic are least similar to one randomly chosen intruder word.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            numpy.ndarray: An array of INT scores for each topic with one intruder word.
         """
         if new_Embeddings:
             self.embeddings = None
@@ -248,17 +343,40 @@ class INT(AbstractMetric):
         return np.array(avg_sim_topic_list)
 
     def score_one_intr(self, model_output, new_Embeddings=True):
+        """
+        Calculates the overall INT score for all topics combined using only one intruder word.
+
+        This method computes the overall INT score by averaging the INT scores obtained
+        from each topic using one randomly chosen intruder word.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            float: The overall INT score for all topics with one intruder word.
+        """
         if new_Embeddings:
             self.embeddings = None
         self.embeddings = None
-        """
-        Calculate the score for all topics combined but only with one intruder word
-        """
+
         return np.mean(self.score_one_intr_per_topic(model_output))
 
     def score_per_topic(self, model_output, new_Embeddings=True):
         """
-        Calculate the score for each topic with several intruder words
+        Calculates the INT scores for each topic individually using several intruder words.
+
+        This method computes the INT score for each topic by averaging the accuracy scores
+        obtained with multiple randomly chosen intruder words.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            numpy.ndarray: An array of INT scores for each topic with several intruder words.
         """
         if new_Embeddings:
             self.embeddings = None
@@ -275,10 +393,22 @@ class INT(AbstractMetric):
         return np.mean(res, axis=1)
 
     def score(self, model_output, new_Embeddings=True):
+        """
+        Calculates the overall INT score for all topics combined using several intruder words.
+
+        This method computes the overall INT score by averaging the INT scores obtained
+        from each topic using multiple randomly chosen intruder words.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics
+                                 and a topic-word matrix.
+            new_Embeddings (bool, optional): Whether to recalculate embeddings. Defaults to True.
+
+        Returns:
+            float: The overall INT score for all topics with several intruder words.
+        """
         if new_Embeddings:
             self.embeddings = None
-        """
-        Calculate the score for all topics combined but only with several intruder words
-        """
+
         self.embeddings = None
         return float(np.mean(self.score_per_topic(model_output)))

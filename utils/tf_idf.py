@@ -1,4 +1,3 @@
-
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 
@@ -49,3 +48,34 @@ def extract_tfidf_topics(tf_idf, count, docs_per_topic, n=10):
     }
 
     return top_n_words
+
+
+def extract_topic_sizes(df):
+    """
+    Extracts and computes the size of each topic from a given DataFrame.
+
+    This function groups the DataFrame by the 'Topic' column, which represents
+    topic IDs, and then counts the number of documents associated with each topic.
+    It returns a DataFrame with two columns: 'Topic' and 'Size', where 'Size' is
+    the count of documents in each topic. The returned DataFrame is sorted in
+    descending order of 'Size'.
+
+    Parameters:
+        df (pandas.DataFrame): A DataFrame containing at least two columns, 'Topic'
+                               and 'docs', where 'Topic' is an ID column for topics
+                               and 'docs' contains documents or data points associated
+                               with each topic.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with 'Topic' and 'Size' columns, where 'Size'
+                          indicates the number of documents in each topic, sorted in
+                          descending order of size.
+    """
+    topic_sizes = (
+        df.groupby(["Topic"])
+        .docs.count()
+        .reset_index()
+        .rename({"Topic": "Topic", "docs": "Size"}, axis="columns")
+        .sort_values("Size", ascending=False)
+    )
+    return topic_sizes

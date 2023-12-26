@@ -1,5 +1,4 @@
-
-from octis.utils._base_embeddings import BaseEmbedder
+from embedder import BaseEmbedder
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity

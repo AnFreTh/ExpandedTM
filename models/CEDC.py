@@ -11,6 +11,23 @@ data_dir = "../preprocessed_datasets"
 
 
 class CEDC(AbstractModel):
+    """
+    A topic modeling class that utilizes sentence embeddings, UMAP for dimensionality
+    reduction, and Gaussian Mixture Models (GMM) for clustering text data into topics.
+
+    This class inherits from the AbstractModel class and is designed for clustering
+    and topic extraction from textual data.
+
+    Attributes:
+        hyperparameters (dict): A dictionary of hyperparameters for the model.
+        n_topics (int): The number of topics to identify in the dataset.
+        embedding_model (SentenceTransformer): The sentence embedding model used to
+            convert text to embeddings.
+        umap_args (dict): Arguments for UMAP dimensionality reduction.
+        gmm_args (dict): Arguments for the Gaussian Mixture Model.
+        dataset (pandas.DataFrame): The dataset used for training, containing the text documents.
+    """
+
     def __init__(
         self,
         hyperparameters=None,
@@ -20,6 +37,23 @@ class CEDC(AbstractModel):
         optim=False,
         modeltype="GMM",
     ):
+        """
+        Initializes the CEDC model with specified hyperparameters, number of topics,
+        embedding model, UMAP arguments, and additional options.
+
+        Parameters:
+            hyperparameters (dict, optional): A dictionary containing model hyperparameters.
+                Defaults to None.
+            num_topics (int, optional): The number of topics to identify in the dataset.
+                Defaults to 20.
+            embedding_model (SentenceTransformer, optional): The model used for generating
+                sentence embeddings. Defaults to SentenceTransformer("all-MiniLM-L6-v2").
+            umap_args (dict, optional): A dictionary containing arguments for UMAP.
+                Defaults to None.
+            optim (bool, optional): If true, enables optimization. Defaults to False.
+            modeltype (str, optional): Type of model to use for clustering, e.g., 'GMM'.
+                Defaults to "GMM".
+        """
         super().__init__()
 
         if hyperparameters == None:
@@ -79,6 +113,27 @@ class CEDC(AbstractModel):
         expansion_corpus="octis",
         n_words=20,
     ):
+        """
+        Trains the CEDC model on the provided dataset, performing topic extraction
+        and clustering using Gaussian Mixture Models.
+
+        Parameters:
+            dataset: The dataset to train the model on, containing text documents.
+            only_nouns (bool, optional): If true, only extracts nouns for topic
+                modeling. Defaults to False.
+            clean (bool, optional): If true, performs cleaning of the extracted topics
+                based on a similarity threshold. Defaults to False.
+            clean_threshold (float, optional): The similarity threshold used for
+                cleaning topics. Defaults to 0.85.
+            expansion_corpus (str, optional): The name of the corpus used for topic
+                expansion. Defaults to "octis".
+            n_words (int, optional): The number of words to consider in each topic.
+                Defaults to 20.
+
+        Returns:
+            dict: A dictionary containing the extracted topics, and potentially cleaned
+            topics and centroids.
+        """
         reducer = umap.UMAP(**self.umap_args)
         self.dataset = dataset
         gmm_data = pd.DataFrame()

@@ -10,6 +10,7 @@ from _helper_funcs import (
 )
 from octis.dataset.dataset import Dataset
 from sentence_transformers import SentenceTransformer
+
 nltk.download("stopwords")
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
@@ -26,12 +27,34 @@ stopwords = list(
 
 
 class NPMI(AbstractMetric):
+    """
+    A class for calculating Normalized Pointwise Mutual Information (NPMI) for topics.
+
+    NPMI is a metric used in topic modeling to measure the coherence of topics by evaluating
+    the co-occurrence of pairs of words across the documents. Higher NPMI scores typically
+    indicate more coherent topics.
+
+    Attributes:
+        stopwords (list): A list of stopwords to exclude from analysis.
+        ntopics (int): The number of topics to evaluate.
+        dataset: The dataset used for calculating NPMI.
+        files (list): Processed text data from the dataset.
+    """
+
     def __init__(
         self,
         dataset,
         stopwords=stopwords,
         n_topics=20,
     ):
+        """
+        Initializes the NPMI object with a dataset, stopwords, and a specified number of topics.
+
+        Parameters:
+            dataset: The dataset to be used for NPMI calculation.
+            stopwords (list, optional): A list of stopwords to exclude from analysis.
+            n_topics (int, optional): The number of topics to evaluate. Defaults to 20.
+        """
         self.stopwords = stopwords
         self.ntopics = n_topics
         self.dataset = dataset
@@ -39,7 +62,22 @@ class NPMI(AbstractMetric):
         files = self.dataset.get_corpus()
         self.files = [" ".join(words) for words in files]
 
-    def _create_vocab_preprocess(self, data, preprocess, process_data=False):
+    def _create_vocab_preprocess(self, data, preprocess=5, process_data=False):
+        """
+        Creates and preprocesses a vocabulary from the given data.
+
+        This method processes the text data to create a vocabulary, filtering out stopwords
+        and applying other preprocessing steps.
+
+        Parameters:
+            data (list): The text data to process.
+            preprocess (int): The minimum number of documents a word must appear in.
+            process_data (bool, optional): Whether to return the processed data. Defaults to False.
+
+        Returns:
+            tuple: A tuple containing word-to-document mappings, multiple word-to-document mappings,
+            and optionally processed data.
+        """
         word_to_file = {}
         word_to_file_mult = {}
 
@@ -89,9 +127,31 @@ class NPMI(AbstractMetric):
         return word_to_file, word_to_file_mult, data
 
     def _create_vocab_and_files(self, preprocess=5):
+        """
+        Creates vocabulary and files necessary for NPMI calculation.
+
+        Parameters:
+            preprocess (int, optional): The minimum number of documents a word must appear in.
+                Defaults to 5.
+
+        Returns:
+            tuple: A tuple containing word-to-document mappings and other relevant data for NPMI calculation.
+        """
         return self._create_vocab_preprocess(self.files, preprocess)
 
     def score(self, model_output):
+        """
+        Calculates the average NPMI score for the given model output.
+
+        The method computes the NPMI score for each pair of words in every topic and then
+        averages these scores to evaluate the overall topic coherence.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics.
+
+        Returns:
+            float: The average NPMI score for the topics.
+        """
         topic_words = model_output["topics"]
         (
             word_doc_counts,
@@ -133,6 +193,21 @@ class NPMI(AbstractMetric):
         return avg_score
 
     def npmi_per_topic(self, topic_words, ntopics, preprocess=5):
+        """
+        Calculates NPMI scores per topic for the given set of topics.
+
+        This method evaluates the coherence of each topic individually by computing NPMI scores
+        for each pair of words within the topic.
+
+        Parameters:
+            topic_words (list): A list of lists containing words in each topic.
+            ntopics (int): The number of topics.
+            preprocess (int, optional): The minimum number of documents a word must appear in.
+                Defaults to 5.
+
+        Returns:
+            dict: A dictionary with topics as keys and their corresponding NPMI scores as values.
+        """
         (
             word_doc_counts,
             dev_word_to_file_mult,
@@ -175,10 +250,15 @@ class NPMI(AbstractMetric):
         return results
 
 
-
 class Embedding_Coherence(AbstractMetric):
     """
-    Average cosine similarity between all top words in a topic
+    A metric class to calculate the coherence of topics based on word embeddings. It computes
+    the average cosine similarity between all top words in each topic.
+
+    Attributes:
+        n_words (int): The number of top words to consider for each topic.
+        corpus_dict (dict): A dictionary mapping each word in the corpus to its embedding.
+        embeddings (numpy.ndarray): The embeddings for the top words of the topics.
     """
 
     def __init__(
@@ -193,8 +273,20 @@ class Embedding_Coherence(AbstractMetric):
         expansion_word_list=None,
     ):
         """
-        corpus_dict: dict that maps each word in the corpus to its embedding
-        n_words: number of top words to consider
+        Initializes the Embedding_Coherence object with a dataset, number of words,
+        embedding model, and paths for storing embeddings.
+
+        Parameters:
+            dataset: The dataset to be used for embedding coherence calculation.
+            n_words (int, optional): The number of top words to consider for each topic.
+                Defaults to 10.
+            metric_embedder (SentenceTransformer, optional): The embedding model to use.
+                Defaults to SentenceTransformer("paraphrase-MiniLM-L6-v2").
+            emb_filename (str, optional): Filename to store embeddings. Defaults to None.
+            emb_path (str, optional): Path to store embeddings. Defaults to "Embeddings/".
+            expansion_path (str, optional): Path for expansion embeddings. Defaults to "Embeddings/".
+            expansion_filename (str, optional): Filename for expansion embeddings. Defaults to None.
+            expansion_word_list (list, optional): List of words for expansion. Defaults to None.
         """
 
         tw_emb = Embed_corpus(
@@ -218,6 +310,18 @@ class Embedding_Coherence(AbstractMetric):
         self.embeddings = None
 
     def score_per_topic(self, model_output):
+        """
+        Calculates coherence scores for each topic individually based on embedding similarities.
+
+        This method computes the coherence of each topic by calculating the average pairwise
+        cosine similarity between the embeddings of the top words in each topic.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics.
+
+        Returns:
+            numpy.ndarray: An array of coherence scores for each topic.
+        """
         topics_tw = model_output["topics"]
 
         emb_tw = Embed_topic(
@@ -239,6 +343,18 @@ class Embedding_Coherence(AbstractMetric):
         return np.array(topic_sims)
 
     def score(self, model_output):
+        """
+        Calculates the overall average coherence score for the given model output.
+
+        This method computes the overall coherence of the topics by averaging the coherence
+        scores obtained from each topic.
+
+        Parameters:
+            model_output (dict): The output of a topic model, containing a list of topics.
+
+        Returns:
+            float: The average coherence score for all topics.
+        """
         res = self.score_per_topic(model_output)
         return sum(res) / len(res)
 
