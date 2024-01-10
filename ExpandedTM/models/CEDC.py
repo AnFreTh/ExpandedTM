@@ -51,7 +51,7 @@ class CEDC(AbstractModel):
                 Defaults to None.
         """
         super().__init__()
-
+        self.trained = False
         self.n_topics = num_topics
         self.embedding_model = SentenceTransformer(embedding_model_name)
         self.embedding_model_name = embedding_model_name
@@ -215,5 +215,7 @@ class CEDC(AbstractModel):
         self.output["topics"] = words_list
         self.output["topic-word-matrix"] = None
         self.output["topic_dict"] = topics
+
+        self.trained = True
 
         return self.output

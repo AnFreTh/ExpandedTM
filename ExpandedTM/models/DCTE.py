@@ -52,7 +52,7 @@ class DCTE(AbstractModel):
         self.n_topics = num_topics
         self.trained = False
         self.model = SetFitModel.from_pretrained(f"sentence-transformers/{model}")
-
+        self.trained = False
         self.batch_size = batch_size
         self.num_iterations = num_iterations
         self.num_epochs = num_epochs
@@ -194,6 +194,7 @@ class DCTE(AbstractModel):
         predict_df["predictions"] = self.labels
 
         self.output = self._get_topics(predict_df, n_top_words)
+        self.trained = True
 
         self.trained = True
 

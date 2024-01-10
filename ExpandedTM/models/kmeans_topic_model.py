@@ -48,6 +48,7 @@ class KmeansTM(AbstractModel):
             optim (bool): Enables optimization for the number of clusters. Defaults to False.
         """
         super().__init__()
+        self.trained = False
         self.n_topics = num_topics
         self.embedding_model = SentenceTransformer(embedding_model_name)
         self.embedding_model_name = embedding_model_name
@@ -169,4 +170,5 @@ class KmeansTM(AbstractModel):
             "topic-word-matrix": tfidf.T,
             "topic_dict": topics,
         }
+        self.trained = True
         return self.output
