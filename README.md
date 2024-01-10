@@ -18,13 +18,13 @@ Available Models
 Available (Additional) Metrics
 =================
 
-| **Name**     | **Description**                                                                                                                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ISIM         | Average cosine similarity of top words of a topic to an intruder word.                                                                                                 |
-| INT          | For a given topic and a given intruder word, Intruder Accuracy is the fraction of top words to which the intruder has the least similar embedding among all top words. |
-| COH          | Embedding Coherence                                                                                                                                                    |
-| Expressivity | Cosine similarity between the centroid of the embeddings of the stopwords and the centroid of the topic.                                                               |
-
+| **Name**            | **Description**                                                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ISIM                | Average cosine similarity of top words of a topic to an intruder word.                                                                                                 |
+| INT                 | For a given topic and a given intruder word, Intruder Accuracy is the fraction of top words to which the intruder has the least similar embedding among all top words. |
+| COH                 | Embedding Coherence                                                                                                                                                    |
+| Embedding Coherence | Cosine similarity between the centroid of the embeddings of the stopwords and the centroid of the topic.                                                               |
+| NPMI                | Classical NPMi coherence computed on the scource corpus.                                                                                                               |
 
 
 ## Usage
@@ -34,18 +34,14 @@ To use these models, follow the steps below:
 1. Import the necessary modules:
 
     ```python
-    from octis.models.CEDC import CEDC
-    from octis.models.KmeansTM import KmeansTM
-    from octis.models.DCTE import DCTE
-    from octis.dataset.dataset import Dataset
+    from ExpandedTM.models import CEDC, KmeansTM, DCTE
+    from ExpandedTM.data_utils import TMDataset
     ```
 
 2. Get your dataset and data directory:
 
     ```python
-    data_dir = './preprocessed_datasets'
-
-    data = Dataset()
+    data = TMDataset()
 
     data.fetch_dataset("20NewsGroup")
     ```
@@ -53,17 +49,34 @@ To use these models, follow the steps below:
 3. Choose the model you want to use and train it:
 
     ```python
-    model = KmeansTM(num_topics=20)
+    model = CEDC(num_topics=20)
     output = model.train_model(dataset)
     ```
 
 4. Evaluate the model using either Octis evaluation metrics or newly defined ones such as INT or ISIM:
 
     ```python
-    from metrics.intruder_metrics import ISIM, INT
+    from ExpandedTM.metrics import ISIM, INT
 
     metric = ISIM(dataset)
     metric.score(output)
     ```
 
+5. Score per topic
 
+
+    ```python
+    metric.score_per_topic(output)
+    ```
+
+6. Visualize the results:
+7. 
+    ```python
+    from ExpandedTM.visuals import visualize_topic_model, visualize_topics
+
+    visualize_topic_model(
+        model, 
+        reduce_first=True, 
+        port=8051,
+        )
+    ```

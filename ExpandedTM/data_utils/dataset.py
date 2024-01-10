@@ -41,7 +41,17 @@ class TMDataset(OCTISDataset):
         self.dataframe["text"] = [" ".join(words) for words in self.dataframe["tokens"]]
 
     def get_embeddings(self, embedding_model_name):
-        embeddings_file = f"../pre_embedded_datasets/{self.name}/{self.name}_embeddings_{embedding_model_name}.pkl"
+        # Get the directory of the current script
+        script_dir = os.path.dirname(__file__)
+
+        # Construct an absolute path to the embeddings file
+        embeddings_file = os.path.join(
+            script_dir,
+            "..",
+            "pre_embedded_datasets",
+            self.name,
+            f"{self.name}_embeddings_{embedding_model_name}.pkl",
+        )
 
         self.get_dataframe()
 
@@ -51,8 +61,8 @@ class TMDataset(OCTISDataset):
             with open(embeddings_file, "rb") as file:
                 embeddings = pickle.load(file)
         else:
-            print("--- Create Embeddings ---")
             # Generate and save embeddings
+            print("--- Create Embeddings ---")
             embeddings = self._generate_embeddings(embedding_model_name)
             with open(embeddings_file, "wb") as file:
                 pickle.dump(embeddings, file)
