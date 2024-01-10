@@ -292,7 +292,7 @@ def _visualize_topic_model_3d(model, reduce_first=False, reducer="umap", port=80
     )
     def update_side_plot(clickData, side_option):
         if clickData:
-            point_index = clickData["points"][0]["pointIndex"]
+            point_index = clickData["points"][0]["pointNumber"]
             selected_topic = point_index
 
             if side_option == "top_words":
@@ -349,7 +349,7 @@ def _visualize_topic_model_3d(model, reduce_first=False, reducer="umap", port=80
     )
     def display_details(clickData):
         if clickData:
-            point_index = clickData["points"][0]["pointIndex"]
+            point_index = clickData["points"][0]["pointNumber"]
             selected_topic = point_index
             top_words_data = get_top_words_for_topic(selected_topic, model.output)
             detailed_info = "Topic {}: ".format(selected_topic) + ", ".join(
@@ -377,7 +377,6 @@ def get_top_tfidf_words_per_document(corpus, n=10):
 
 
 def _visualize_topics_2d(model, reducer="umap", port=8050):
-    
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])
@@ -403,10 +402,19 @@ def _visualize_topics_2d(model, reducer="umap", port=8050):
 
     app = dash.Dash(__name__)
 
-    # Dynamic slider for adjusting top words count
+    # Unique labels for dropdown with an option to show all
+    unique_labels = ["All"] + list(df["label"].unique())
+
+    # App layout
     app.layout = html.Div(
         [
             html.H1("Model Visualization Dashboard"),
+            dcc.Dropdown(
+                id="topic-dropdown",
+                options=[{"label": i, "value": i} for i in unique_labels],
+                value="All",
+                clearable=False,
+            ),
             dcc.Slider(
                 id="num-top-words-slider",
                 min=1,
@@ -420,36 +428,49 @@ def _visualize_topics_2d(model, reducer="umap", port=8050):
         ]
     )
 
+    # Callback for updating scatter plot
     @app.callback(
-        Output("scatter-plot", "figure"), [Input("num-top-words-slider", "value")]
+        Output("scatter-plot", "figure"),
+        [Input("num-top-words-slider", "value"), Input("topic-dropdown", "value")],
     )
-    def update_plot(num_top_words):
-        # Adjust top_words based on slider value
-        df["top_words"] = [
+    def update_plot(num_top_words, selected_topic):
+        if selected_topic == "All":
+            plot_df = df.copy()
+            filtered_top_words = top_words_per_document
+        else:
+            plot_df = df[df["label"] == selected_topic].copy()
+            # Filter top_words_per_document to match the filtered plot_df
+            filtered_top_words = [
+                words
+                for label, words in zip(labels, top_words_per_document)
+                if label == selected_topic
+            ]
+
+        plot_df["top_words"] = [
             "<br>".join(
                 [f"{word} ({score:.2f})" for word, score in words[:num_top_words]]
             )
-            for words in top_words_per_document
+            for words in filtered_top_words
         ]
 
         fig = px.scatter(
-            df,
+            plot_df,
             x="x",
             y="y",
             color="label",
             hover_data={"top_words": True},
             labels={"color": "Cluster"},
-            title="Document Clusters",
+            title=f"Document Clusters {'(All Topics)' if selected_topic == 'All' else f'for Topic: {selected_topic}'}",
         )
-        fig.update_traces(marker=dict(size=3))
+        fig.update_traces(marker=dict(size=8))
         fig.update_layout(width=1000, height=800)
         return fig
 
+    # Callback for info panel
     @app.callback(
         Output("info-panel", "children"), [Input("scatter-plot", "clickData")]
     )
     def display_info(clickData):
-        # Display more information when a point is clicked
         if clickData:
             idx = clickData["points"][0]["pointIndex"]
             return html.P(f"Document ID: {idx}, More info here...")
@@ -459,11 +480,11 @@ def _visualize_topics_2d(model, reducer="umap", port=8050):
 
 
 def _visualize_topics_3d(model, reducer="umap", port=8050):
-
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])
 
+    # Reduce embeddings to 3D for visualization
     if reducer == "umap":
         reducer = umap.UMAP(n_components=3)
     elif reducer == "tsne":
@@ -482,32 +503,81 @@ def _visualize_topics_3d(model, reducer="umap", port=8050):
         for words in top_words_per_document
     ]
 
-    # Initialize Dash app
     app = dash.Dash(__name__)
 
-    # Create the figure using Plotly Express
-    fig = px.scatter_3d(
-        df,
-        x="x",
-        y="y",
-        z="z",
-        color="label",
-        hover_data={"top_words": True},
-        labels={"color": "Cluster"},
-        title="Document Clusters",
-    )
+    # Unique labels for dropdown with an option to show all
+    unique_labels = ["All"] + list(df["label"].unique())
 
-    # Manually adjust the marker size to make it smaller
-    fig.update_traces(marker=dict(size=2))  # Decrease the marker size
-
-    # Increase the overall plot size
-    fig.update_layout(width=1000, height=800)  # Adjust width and height as needed
-
+    # App layout
     app.layout = html.Div(
         [
             html.H1("Model Visualization Dashboard"),
-            dcc.Graph(id="scatter-plot", figure=fig),
+            dcc.Dropdown(
+                id="topic-dropdown",
+                options=[{"label": i, "value": i} for i in unique_labels],
+                value="All",
+                clearable=False,
+            ),
+            dcc.Slider(
+                id="num-top-words-slider",
+                min=1,
+                max=25,
+                value=5,
+                marks={i: str(i) for i in range(1, 11)},
+                step=1,
+            ),
+            dcc.Graph(id="scatter-plot"),
+            html.Div(id="info-panel"),
         ]
     )
+
+    # Callback for updating scatter plot
+    @app.callback(
+        Output("scatter-plot", "figure"),
+        [Input("num-top-words-slider", "value"), Input("topic-dropdown", "value")],
+    )
+    def update_plot(num_top_words, selected_topic):
+        if selected_topic == "All":
+            plot_df = df.copy()
+            filtered_top_words = top_words_per_document
+        else:
+            plot_df = df[df["label"] == selected_topic].copy()
+            # Filter top_words_per_document to match the filtered plot_df
+            filtered_top_words = [
+                words
+                for label, words in zip(labels, top_words_per_document)
+                if label == selected_topic
+            ]
+
+        plot_df["top_words"] = [
+            "<br>".join(
+                [f"{word} ({score:.2f})" for word, score in words[:num_top_words]]
+            )
+            for words in filtered_top_words
+        ]
+
+        fig = px.scatter_3d(
+            plot_df,
+            x="x",
+            y="y",
+            z="z",
+            color="label",
+            hover_data={"top_words": True},
+            labels={"color": "Cluster"},
+            title=f"Document Clusters {'(All Topics)' if selected_topic == 'All' else f'for Topic: {selected_topic}'}",
+        )
+        fig.update_traces(marker=dict(size=8))
+        fig.update_layout(width=1000, height=800)
+        return fig
+
+    # Callback for info panel
+    @app.callback(
+        Output("info-panel", "children"), [Input("scatter-plot", "clickData")]
+    )
+    def display_info(clickData):
+        if clickData:
+            idx = clickData["points"][0]["pointNumber"]
+            return html.P(f"Document ID: {idx}, More info here...")
+        return "Click on a point to see more information."
 
     app.run_server(debug=True, port=port)
