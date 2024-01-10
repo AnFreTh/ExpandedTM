@@ -5,9 +5,8 @@ import random
 import string
 from unittest.mock import patch, MagicMock
 
-sys.path.append("../..")
-from metrics.diversity_metrics import Embedding_Topic_Diversity
-from data_utils.dataset import TMDataset
+from ExpandedTM.metrics.diversity_metrics import Embedding_Topic_Diversity
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestEmbeddingTopicDiversity(unittest.TestCase):

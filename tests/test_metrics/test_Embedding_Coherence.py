@@ -5,9 +5,8 @@ import random
 import string
 from unittest.mock import patch, MagicMock
 
-sys.path.append("../..")
-from metrics.coherence_metrics import Embedding_Coherence
-from data_utils.dataset import TMDataset
+from ExpandedTM.metrics.coherence_metrics import Embedding_Coherence
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestEmbeddingCoherence(unittest.TestCase):

@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 *.pyo
+*.json
+model_head.pkl
+model.safetensors
+vocab.txt

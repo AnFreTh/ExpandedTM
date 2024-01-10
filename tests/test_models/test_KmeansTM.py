@@ -1,14 +1,9 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import sys
 import pandas as pd
 import numpy as np
-import random
-import string
-
-sys.path.append("../..")
-from models.Kmeans import KmeansTM
-from data_utils.dataset import TMDataset
+from ExpandedTM.models.Kmeans import KmeansTM
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestKmeansTM(unittest.TestCase):
@@ -28,7 +23,7 @@ class TestKmeansTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("models.CEDC.umap.UMAP")
+    @patch("ExpandedTM.models.CEDC.umap.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Test dimensionality reduction
         self.model.dataset = self.mock_dataset
@@ -37,7 +32,7 @@ class TestKmeansTM(unittest.TestCase):
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
 
-    @patch("models.Kmeans.KMeans")
+    @patch("ExpandedTM.models.Kmeans.KMeans")
     def test_clustering(self, mock_kmeans):
         # Test clustering
         self.model.dataset = self.mock_dataset
