@@ -6,6 +6,8 @@ import dash
 from dash import dcc, html, Input, Output
 import plotly.graph_objs as go
 import numpy as np
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 
 
 from scipy.spatial.distance import cosine
@@ -31,7 +33,7 @@ def calculate_distances_to_other_topics(selected_topic_index, plot_df, model_out
     return distances
 
 
-def _visualize_topic_model_2d(model, reduce_first=False, port=8050):
+def _visualize_topic_model_2d(model, reduce_first=False, reducer="umap", port=8050):
     num_docs_per_topic = pd.Series(model.labels).value_counts().sort_index()
 
     # Extract top words for each topic with importance and format them vertically
@@ -42,8 +44,16 @@ def _visualize_topic_model_2d(model, reduce_first=False, port=8050):
         for topic, words in model.output["topic_dict"].items()
     }
 
-    if reduce_first:
+    if reducer == "umap":
         reducer = umap.UMAP(n_components=2)
+    elif reducer == "tsne":
+        reducer = TSNE(n_components=2, perplexity=30, learning_rate=200)
+    elif reducer == "pca":
+        reducer = PCA(n_components=2)
+    else:
+        raise ValueError("reducer must be in ['umap', 'tnse', 'pca']")
+
+    if reduce_first:
         embeddings = reducer.fit_transform(model.embeddings)
         topic_data = []
         # Iterate over unique labels and compute mean embedding for each
@@ -68,7 +78,6 @@ def _visualize_topic_model_2d(model, reduce_first=False, port=8050):
                 # Store the mean embedding in the dictionary
                 topic_data.append(mean_embedding)
 
-    reducer = umap.UMAP(n_components=2)
     topic_embeddings_2d = reducer.fit_transform(topic_data)
 
     # Create DataFrame for plotting
@@ -184,10 +193,10 @@ def _visualize_topic_model_2d(model, reduce_first=False, port=8050):
             return detailed_info
         return "Click a point for details"
 
-    app.run_server(debug=True, port=8050)
+    app.run_server(debug=True, port=port)
 
 
-def _visualize_topic_model_3d(model, reduce_first=False, port=8050):
+def _visualize_topic_model_3d(model, reduce_first=False, reducer="umap", port=8050):
     num_docs_per_topic = pd.Series(model.labels).value_counts().sort_index()
 
     # Extract top words for each topic with importance and format them vertically
@@ -198,8 +207,16 @@ def _visualize_topic_model_3d(model, reduce_first=False, port=8050):
         for topic, words in model.output["topic_dict"].items()
     }
 
+    if reducer == "umap":
+        reducer = umap.UMAP(n_components=2)
+    elif reducer == "tsne":
+        reducer = TSNE(n_components=2, perplexity=30, learning_rate=200)
+    elif reducer == "pca":
+        reducer = PCA(n_components=2)
+    else:
+        raise ValueError("reducer must be in ['umap', 'tnse', 'pca']")
+
     if reduce_first:
-        reducer = umap.UMAP(n_components=3)
         embeddings = reducer.fit_transform(model.embeddings)
         topic_data = []
         # Iterate over unique labels and compute mean embedding for each
@@ -341,7 +358,7 @@ def _visualize_topic_model_3d(model, reduce_first=False, port=8050):
             return detailed_info
         return "Click a point for details"
 
-    app.run_server(debug=True, port=8050)
+    app.run_server(debug=True, port=port)
 
 
 def get_top_tfidf_words_per_document(corpus, n=10):
@@ -359,24 +376,21 @@ def get_top_tfidf_words_per_document(corpus, n=10):
     return top_words_per_document
 
 
-def _visualize_topics_2d(model, port=8050):
-    """
-    Launches a Dash app to visualize topics based on TF-IDF and UMAP embeddings.
-
-    Parameters:
-        corpus (list of str): The corpus of documents.
-        embeddings (np.ndarray): The embeddings of the documents.
-        labels (np.ndarray): The assigned labels for each document.
-        port (int): Port number for the Dash app.
-    """
-
-    topics = model.output["topic_dict"]
+def _visualize_topics_2d(model, reducer="umap", port=8050):
+    
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])
 
     # Reduce embeddings to 2D for visualization
-    reducer = umap.UMAP(n_components=2)
+    if reducer == "umap":
+        reducer = umap.UMAP(n_components=2)
+    elif reducer == "tsne":
+        reducer = TSNE(n_components=2, perplexity=30, learning_rate=200)
+    elif reducer == "pca":
+        reducer = PCA(n_components=2)
+    else:
+        raise ValueError("reducer must be in ['umap', 'tnse', 'pca']")
     reduced_embeddings = reducer.fit_transform(embeddings)
 
     # Prepare DataFrame for scatter plot
@@ -444,24 +458,20 @@ def _visualize_topics_2d(model, port=8050):
     app.run_server(debug=True, port=port)
 
 
-def _visualize_topics_3d(model, port=8050):
-    """
-    Launches a Dash app to visualize topics based on TF-IDF and UMAP embeddings.
+def _visualize_topics_3d(model, reducer="umap", port=8050):
 
-    Parameters:
-        corpus (list of str): The corpus of documents.
-        embeddings (np.ndarray): The embeddings of the documents.
-        labels (np.ndarray): The assigned labels for each document.
-        port (int): Port number for the Dash app.
-    """
-
-    topics = model.output["topic_dict"]
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])
 
-    # Reduce embeddings to 2D for visualization
-    reducer = umap.UMAP(n_components=3)
+    if reducer == "umap":
+        reducer = umap.UMAP(n_components=3)
+    elif reducer == "tsne":
+        reducer = TSNE(n_components=3, perplexity=30, learning_rate=200)
+    elif reducer == "pca":
+        reducer = PCA(n_components=3)
+    else:
+        raise ValueError("reducer must be in ['umap', 'tnse', 'pca']")
     reduced_embeddings = reducer.fit_transform(embeddings)
 
     # Prepare DataFrame for scatter plot
