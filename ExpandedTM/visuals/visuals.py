@@ -1,7 +1,5 @@
-import umap.umap_ as umap
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
-import numpy as np
 from ._interactive import (
     _visualize_topic_model_2d,
     _visualize_topic_model_3d,
@@ -40,88 +38,43 @@ def visualize_topics_as_wordclouds(model, max_words=100):
         plt.show()
 
 
-def visualize_clusters_2d(model):
+def visualize_topic_model(
+    model, three_dim=False, reduce_first=False, reducer="umap", port=8050
+):
+    """_summary_
+
+    Args:
+        model (AbstractModel): trained topic model
+        three_dim (bool, optional): whether to cisualize 3-dimensional or 2-dimensional. Defaults to False.
+        reduce_first (bool, optional): Whether the document embeddings are first dimensionality reduced and then the topical centroids are computed. Defaults to False.
+        reducer (str, optional): Which model is used to perform dimensionality reduction. Defaults to "umap".
+        port (int, optional): port of dash plot. Defaults to 8050.
     """
-    Visualizes the clusters created by the model in a 2D space using UMAP for dimensionality reduction.
+    assert (
+        model.trained
+    ), "Be sure to only pass a trained model to the visualization function"
 
-    Parameters:
-        model (KmeansTM): A trained instance of the KmeansTM model.
-    """
-    assert hasattr(model, "embeddings"), "Model must have 'embeddings' attribute."
-    assert hasattr(model, "labels"), "Model must have 'labels' attribute."
-
-    # Reduce dimensionality to 2D
-    umap_model = umap.UMAP(n_components=2, random_state=42)
-    reduced_embeddings = umap_model.fit_transform(model.embeddings)
-
-    # Plotting
-    plt.figure(figsize=(12, 8))
-    scatter = plt.scatter(
-        reduced_embeddings[:, 0],
-        reduced_embeddings[:, 1],
-        c=model.labels,
-        cmap="viridis",
-        s=5,
-    )
-    plt.title("Cluster Visualization in 2D Space")
-    plt.xlabel("UMAP Dimension 1")
-    plt.ylabel("UMAP Dimension 2")
-    plt.colorbar(scatter, label="Cluster")
-    plt.show()
-
-
-def visualize_topic_centroids(model):
-    """
-    Visualizes a Topic Distance Map using UMAP.
-
-    Parameters:
-        model (KmeansTM): A trained instance of the KmeansTM model.
-    """
-    # Check if centroids are available
-    if hasattr(model, "topic_centroids"):
-        centroids = model.topic_centroids
-    else:
-        # Ensure embeddings and labels are present
-        assert hasattr(model, "embeddings") and hasattr(
-            model, "labels"
-        ), "Model must have 'embeddings' and 'labels' attributes."
-
-        # Compute centroids from embeddings and labels
-        unique_labels = np.unique(model.labels)
-        centroids = np.array(
-            [
-                model.embeddings[model.labels == label].mean(axis=0)
-                for label in unique_labels
-            ]
-        )
-
-    # Use UMAP for dimensionality reduction
-    umap_model = umap.UMAP(n_components=2, random_state=42)
-    reduced_centroids = umap_model.fit_transform(centroids)
-
-    # Plotting
-    plt.figure(figsize=(12, 8))
-    plt.scatter(reduced_centroids[:, 0], reduced_centroids[:, 1], marker="o")
-    for i, centroid in enumerate(reduced_centroids):
-        plt.text(
-            centroid[0], centroid[1], str(i), fontdict={"weight": "bold", "size": 9}
-        )
-
-    plt.title("Topic Distance Map with UMAP")
-    plt.xlabel("UMAP Dimension 1")
-    plt.ylabel("UMAP Dimension 2")
-    plt.show()
-
-
-def visualize_topic_model(model, three_dim=True, reduce_first=False, port=8050):
     if three_dim:
-        _visualize_topic_model_3d(model, reduce_first, port)
+        _visualize_topic_model_3d(model, reduce_first, reducer, port)
     else:
-        _visualize_topic_model_2d(model, reduce_first, port)
+        _visualize_topic_model_2d(model, reduce_first, reducer, port)
 
 
-def visualize_topics(model, three_dim=True, port=8050):
+def visualize_topics(model, three_dim=False, reducer="umap", port=8050):
+    """_summary_
+
+    Args:
+        model (AbstractModel): trained topic model
+        three_dim (bool, optional): whether to cisualize 3-dimensional or 2-dimensional. Defaults to False.
+        reducer (str, optional): Which model is used to perform dimensionality reduction. Defaults to "umap".
+        port (int, optional): port of dash plot. Defaults to 8050.
+    """
+
+    assert (
+        model.trained
+    ), "Be sure to only pass a trained model to the visualization function"
+
     if three_dim:
-        _visualize_topics_3d(model, port)
+        _visualize_topics_3d(model, reducer, port)
     else:
-        _visualize_topics_2d(model, port)
+        _visualize_topics_2d(model, reducer, port)
