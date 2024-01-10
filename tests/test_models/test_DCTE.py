@@ -1,14 +1,10 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import sys
 import pandas as pd
-import numpy as np
 import random
 import string
-
-sys.path.append("../..")
-from models.DCTE import DCTE
-from data_utils.dataset import TMDataset
+from ExpandedTM.models.DCTE import DCTE
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestDCTE(unittest.TestCase):

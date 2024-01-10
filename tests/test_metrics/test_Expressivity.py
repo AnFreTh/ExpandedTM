@@ -5,9 +5,8 @@ import random
 import string
 from unittest.mock import patch, MagicMock
 
-sys.path.append("../..")
-from metrics.diversity_metrics import Expressivity
-from data_utils.dataset import TMDataset
+from ExpandedTM.metrics.diversity_metrics import Expressivity
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestExpressivity(unittest.TestCase):

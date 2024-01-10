@@ -1,9 +1,8 @@
-from setfit import SetFitModel, SetFitTrainer
+from setfit import SetFitModel, Trainer, TrainingArguments
 import pyarrow as pa
 import pandas as pd
 from datasets import Dataset
 from sentence_transformers.losses import CosineSimilarityLoss
-from setfit import SetFitModel, SetFitTrainer
 from octis.models.model import AbstractModel
 from sklearn import preprocessing
 from ..utils.tf_idf import c_tf_idf, extract_tfidf_topics
@@ -51,6 +50,7 @@ class DCTE(AbstractModel):
                 Defaults to 10.
         """
         self.n_topics = num_topics
+        self.trained = False
         self.model = SetFitModel.from_pretrained(f"sentence-transformers/{model}")
         self.trained = False
         self.batch_size = batch_size
@@ -127,6 +127,7 @@ class DCTE(AbstractModel):
         predict_dataset,
         val_split: float = 0.2,
         n_top_words: int = 10,
+        **training_args,
     ):
         """
         Trains the DCTE model using the given training dataset and then performs
@@ -147,6 +148,23 @@ class DCTE(AbstractModel):
             dict: A dictionary containing the extracted topics and the topic-word matrix.
         """
 
+        # Set default training arguments
+        default_args = {
+            "batch_size": self.batch_size,
+            "num_epochs": self.num_epochs,
+            "evaluation_strategy": "epoch",
+            "save_strategy": "epoch",
+            "num_iterations": self.num_iterations,
+            "load_best_model_at_end": True,
+            "loss": CosineSimilarityLoss,
+        }
+
+        # Update default arguments with any user-provided arguments
+        default_args.update(training_args)
+
+        # Use the updated arguments
+        args = TrainingArguments(**default_args)
+
         self.train_dataset = train_dataset
         self._prepare_data(val_split=val_split)
 
@@ -154,14 +172,11 @@ class DCTE(AbstractModel):
             self, "val_ds"
         ), "The training and Validation datasets have to be processed before training"
 
-        self.trainer = SetFitTrainer(
+        self.trainer = Trainer(
             model=self.model,
+            args=args,
             train_dataset=self.train_ds,
             eval_dataset=self.val_ds,
-            loss_class=CosineSimilarityLoss,
-            batch_size=self.batch_size,
-            num_iterations=self.num_iterations,
-            num_epochs=self.num_epochs,
         )
 
         # train
@@ -179,6 +194,8 @@ class DCTE(AbstractModel):
         predict_df["predictions"] = self.labels
 
         self.output = self._get_topics(predict_df, n_top_words)
+        self.trained = True
+
         self.trained = True
 
         return self.output

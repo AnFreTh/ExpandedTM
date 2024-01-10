@@ -5,9 +5,8 @@ import random
 import string
 from unittest.mock import patch, MagicMock
 
-sys.path.append("../..")
-from metrics.intruder_metrics import ISIM
-from data_utils.dataset import TMDataset
+from ExpandedTM.metrics.intruder_metrics import ISIM
+from ExpandedTM.data_utils.dataset import TMDataset
 
 
 class TestISIM(unittest.TestCase):
