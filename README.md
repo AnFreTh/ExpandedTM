@@ -6,11 +6,11 @@ The implemented models include CEDC, DCTE, KMeans, Top2Vec.
 Available Models
 =================
 
-| **Name**                              | **Implementation**                 |
-| ------------------------------------- | ---------------------------------- |
-| CEDC                                  | Topics in the Haystack             |
-| DCTE                                  | Human in the Loop                  |
-| KMeans                                | Simple Kmeans followed by c-tfidf  |
+| **Name** | **Implementation**                |
+| -------- | --------------------------------- |
+| CEDC     | Topics in the Haystack            |
+| DCTE     | Human in the Loop                 |
+| KMeansTM | Simple Kmeans followed by c-tfidf |
 
 
 
@@ -60,7 +60,7 @@ To use these models, follow the steps below:
 4. Evaluate the model using either Octis evaluation metrics or newly defined ones such as INT or ISIM:
 
     ```python
-    from octis.evaluation_metrics.intruder_metrics import ISIM, INT
+    from metrics.intruder_metrics import ISIM, INT
 
     metric = ISIM(dataset)
     metric.score(output)
