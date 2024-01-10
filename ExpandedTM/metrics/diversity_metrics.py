@@ -166,7 +166,7 @@ class Embedding_Topic_Diversity(AbstractMetric):
         )  # average the similarity of each topic's mean to the mean of every other topic
 
         results = {}
-        for k in range(model_output["topics"]):
+        for k in range(len(model_output["topics"])):
             half_topic_words = topics_tw[k][
                 : len(topics_tw[k]) // 2
             ]  # Take only the first half of the words
