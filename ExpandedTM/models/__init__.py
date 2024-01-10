@@ -1,3 +1,3 @@
-from .cedc import CEDC
-from .dcte import DCTE
-from .kmeans_topic_model import KmeansTM
+from .CEDC import CEDC
+from .DCTE import DCTE
+from .KmeansTM import KmeansTM
