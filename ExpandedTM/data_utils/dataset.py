@@ -41,24 +41,24 @@ class TMDataset(OCTISDataset):
     @staticmethod
     def get_package_dataset_path(relative_path):
         # Get the directory of the current script (Package/data_utils/dataset.py)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        package_dir = os.path.dirname(os.path.abspath(TMDataset.__module__))
         # Construct the absolute path to the package's preprocessed_datasets folder
         preprocessed_datasets_folder = os.path.join(
-            os.path.dirname(os.path.dirname(script_dir)), "preprocessed_datasets"
+            package_dir, "preprocessed_datasets"
         )
         # Combine the preprocessed_datasets folder with the relative path
         return os.path.join(preprocessed_datasets_folder, relative_path)
 
     @staticmethod
     def get_package_embeddings_path(relative_path):
-        # Get the directory of the current script (Package/data_utils/dataset.py)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        # Construct the absolute path to the package's preprocessed_datasets folder
-        preprocessed_datasets_folder = os.path.join(
-            os.path.dirname(os.path.dirname(script_dir)), "pre_embedded_datasets"
+        # This will get the path to the 'ExpandedTM' package directory
+        package_dir = os.path.dirname(os.path.abspath(TMDataset.__module__))
+        # Construct the absolute path to the 'pre_embedded_datasets' folder within the package
+        pre_embedded_datasets_folder = os.path.join(
+            package_dir, "pre_embedded_datasets"
         )
-        # Combine the preprocessed_datasets folder with the relative path
-        return os.path.join(preprocessed_datasets_folder, relative_path)
+        # Combine the 'pre_embedded_datasets' folder path with the relative path
+        return os.path.join(pre_embedded_datasets_folder, relative_path)
 
     def get_embeddings(self, embedding_model_name):
         # Construct the dataset folder path
