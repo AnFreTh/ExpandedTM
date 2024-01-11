@@ -40,15 +40,29 @@ class TMDataset(OCTISDataset):
 
     @staticmethod
     def get_package_dataset_path(relative_path):
-        # Define the base path to your package's dataset directory
-        base_path = os.path.join(os.path.dirname(__file__), "preprocessed_datasets")
+        # Get the directory of the current script (Package/data_utils/dataset.py)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to the package's preprocessed_datasets folder
+        preprocessed_datasets_folder = os.path.join(
+            os.path.dirname(os.path.dirname(script_dir)), "preprocessed_datasets"
+        )
+        # Combine the preprocessed_datasets folder with the relative path
+        return os.path.join(preprocessed_datasets_folder, relative_path)
 
-        # Combine the base path with the relative path
-        return os.path.join(base_path, relative_path)
+    @staticmethod
+    def get_package_embeddings_path(relative_path):
+        # Get the directory of the current script (Package/data_utils/dataset.py)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to the package's preprocessed_datasets folder
+        preprocessed_datasets_folder = os.path.join(
+            os.path.dirname(os.path.dirname(script_dir)), "pre_embedded_datasets"
+        )
+        # Combine the preprocessed_datasets folder with the relative path
+        return os.path.join(preprocessed_datasets_folder, relative_path)
 
     def get_embeddings(self, embedding_model_name):
         # Construct the dataset folder path
-        dataset_folder = self.get_package_dataset_path(self.name)
+        dataset_folder = self.get_package_embeddings_path(self.name)
 
         # Ensure the dataset folder exists or create it if it doesn't
         os.makedirs(dataset_folder, exist_ok=True)
