@@ -39,26 +39,24 @@ class TMDataset(OCTISDataset):
         self.dataframe["text"] = [" ".join(words) for words in self.dataframe["tokens"]]
 
     @staticmethod
-    def get_package_dataset_path(relative_path):
-        # Get the directory of the current script (Package/data_utils/dataset.py)
-        package_dir = os.path.dirname(os.path.abspath(TMDataset.__module__))
-        # Construct the absolute path to the package's preprocessed_datasets folder
-        preprocessed_datasets_folder = os.path.join(
-            package_dir, "preprocessed_datasets"
-        )
-        # Combine the preprocessed_datasets folder with the relative path
-        return os.path.join(preprocessed_datasets_folder, relative_path)
+    def get_package_dataset_path(name):
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up one level to the 'MyPackage' directory
+        my_package_dir = os.path.dirname(script_dir)
+        # Construct the path to the 'preprocessed_datasets' within 'MyPackage'
+        dataset_path = os.path.join(my_package_dir, "preprocessed_datasets", name)
+        return dataset_path
 
     @staticmethod
-    def get_package_embeddings_path(relative_path):
-        # This will get the path to the 'ExpandedTM' package directory
-        package_dir = os.path.dirname(os.path.abspath(TMDataset.__module__))
-        # Construct the absolute path to the 'pre_embedded_datasets' folder within the package
-        pre_embedded_datasets_folder = os.path.join(
-            package_dir, "pre_embedded_datasets"
-        )
-        # Combine the 'pre_embedded_datasets' folder path with the relative path
-        return os.path.join(pre_embedded_datasets_folder, relative_path)
+    def get_package_embeddings_path(name):
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up one level to the 'MyPackage' directory
+        my_package_dir = os.path.dirname(script_dir)
+        # Construct the path to the 'preprocessed_datasets' within 'MyPackage'
+        dataset_path = os.path.join(my_package_dir, "pre_embedded_datasets", name)
+        return dataset_path
 
     def get_embeddings(self, embedding_model_name):
         # Construct the dataset folder path
