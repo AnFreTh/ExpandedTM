@@ -20,7 +20,6 @@ class TMDataset(OCTISDataset):
         # Check if the path is relative to the package datasets
         self.name = name
         package_dataset_path = self.get_package_dataset_path(name)
-        print(package_dataset_path)
 
         if os.path.exists(package_dataset_path):
             # If the dataset exists in the package, load it from there
