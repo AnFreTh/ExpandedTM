@@ -34,6 +34,8 @@ class KmeansTM(AbstractModel):
         random_state: int = None,
         optim: bool = False,
         optim_range: list = [5, 25],
+        embeddings_folder_path:str=None,
+        embeddings_file_path:str=None
     ):
         """
         Initializes the KmeansTM model with specified parameters.
@@ -66,6 +68,8 @@ class KmeansTM(AbstractModel):
         self.kmeans_args = kmeans_args
         self.optim = optim
         self.optim_range = optim_range
+        self.embeddings_path = embeddings_folder_path
+        self.embeddings_file_path = embeddings_file_path
 
         assert (
             isinstance(num_topics, int) and num_topics > 0
@@ -83,7 +87,7 @@ class KmeansTM(AbstractModel):
 
         """
 
-        self.embeddings = self.dataset.get_embeddings(self.embedding_model_name)
+        self.embeddings = self.dataset.get_embeddings(self.embedding_model_name, self.embeddings_path, self.embeddings_file_path)
         self.dataframe = self.dataset.dataframe
 
     def _clustering(self):

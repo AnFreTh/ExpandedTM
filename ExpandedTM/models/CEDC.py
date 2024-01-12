@@ -35,6 +35,8 @@ class CEDC(AbstractModel):
         umap_args: dict = {},
         random_state: int = None,
         gmm_args: dict = {},
+        embeddings_folder_path:str=None,
+        embeddings_file_path:str=None
     ):
         """
         Initializes the CEDC model with specified hyperparameters, number of topics,
@@ -55,6 +57,8 @@ class CEDC(AbstractModel):
         self.n_topics = num_topics
         self.embedding_model = SentenceTransformer(embedding_model_name)
         self.embedding_model_name = embedding_model_name
+        self.embeddings_path = embeddings_folder_path
+        self.embeddings_file_path = embeddings_file_path
         self.umap_args = (
             umap_args
             if umap_args
@@ -90,7 +94,7 @@ class CEDC(AbstractModel):
             self.dataset, TMDataset
         ), "The dataset must be an instance of TMDataset."
 
-        self.embeddings = self.dataset.get_embeddings(self.embedding_model_name)
+        self.embeddings = self.dataset.get_embeddings(self.embedding_model_name, self.embeddings_path, self.embeddings_file_path)
         self.dataframe = self.dataset.dataframe
 
     def _clustering(self):
