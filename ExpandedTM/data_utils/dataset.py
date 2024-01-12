@@ -14,6 +14,20 @@ class TMDataset(OCTISDataset):
     def __init__(self):
         super().__init__()
 
+        self.dataset_registry = [
+            "20NewsGroup",
+            "M10",
+            "Spotify",
+            "Spotify_most_popular",
+            "Poliblogs",
+            "Reuters",
+            "BBC_News",
+            "DBLP",
+            "DBPedia_IT",
+            "Europarl_IT"
+
+        ]
+
     def fetch_dataset(self, name, dataset_path=None):
         # Check if the path is relative to the package datasets
         self.name = name
@@ -59,6 +73,9 @@ class TMDataset(OCTISDataset):
     def get_embeddings(
         self, embedding_model_name, path: str = None, file_name: str = None
     ):
+        
+        if self.name not in self.dataset_registry and path is None:
+            raise ValueError("Please specify a dataset path and a file path where to save the embedding files")
         # Construct the dataset folder path
         if path is not None:
             dataset_folder = path
