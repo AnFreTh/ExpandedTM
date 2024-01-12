@@ -122,6 +122,58 @@ class TMDataset(OCTISDataset):
         )
 
         return embeddings
+    
+
+    def get_embeddings_vocabulary(
+        self, embedding_model_name, path: str = None, file_name: str = None
+    ):
+        if self.name not in self.dataset_registry and path is None:
+            raise ValueError("Please specify a dataset path and a file path where to save the embedding files")
+        # Construct the dataset folder path
+        if path is not None:
+            dataset_folder = path
+        else:
+            dataset_folder = self.get_package_embeddings_path(self.name)
+
+        # Ensure the dataset folder exists or create it if it doesn't
+        os.makedirs(dataset_folder, exist_ok=True)
+
+        if file_name is not None:
+            # Construct the embeddings file path
+            embeddings_file = os.path.join(
+                dataset_folder,
+                file_name,
+            )
+        else:
+            # Construct the embeddings file path
+            embeddings_file = os.path.join(
+                dataset_folder,
+                f"{self.name}_embeddings_vocabulary_{embedding_model_name}.pkl",
+            )
+
+        if os.path.exists(embeddings_file):
+            # Load existing embeddings
+            print("--- loading pre-computed vocabulary embeddings ---")
+            with open(embeddings_file, "rb") as file:
+                embeddings = pickle.load(file)
+        else:
+            # Generate and save embeddings
+            print("--- Create vocabulary Embeddings ---")
+            embeddings = self._generate_embeddings_vocabulary(embedding_model_name)
+            with open(embeddings_file, "wb") as file:
+                pickle.dump(embeddings, file)
+
+        return embeddings
+    
+    def _generate_embeddings_vocabulary(self, embedding_model_name):
+        # generate embeddings for the vocabulary
+        self.embedding_model = SentenceTransformer(embedding_model_name)
+        vocabulary = self.get_vocabulary()
+        embeddings = self.embedding_model.encode(
+            vocabulary
+        )
+
+        return embeddings
 
     @staticmethod
     def clean_text(text):
