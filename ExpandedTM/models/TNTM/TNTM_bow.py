@@ -5,8 +5,8 @@ from tqdm import tqdm
 from tqdm import tqdm
 import numpy as np
 
-import Initialization as init
-import TNTM_inference
+import ExpandedTM.models.TNTM.TNTM_inference as TNTM_inference
+import ExpandedTM.models.TNTM.Initialization as init
 
 from octis.models.model import AbstractModel
 
@@ -15,7 +15,7 @@ class TNTM_bow(AbstractModel):
   def __init__(
     self,
     embedding_model_name_vocabulary: str = "all-MiniLM-L6-v2",
-    n_topics: int = 20,
+    num_topics: int = 20,
     save_path: str = None,
     n_dims: int = 11,
     n_hidden_units: int = 200,
@@ -57,7 +57,7 @@ class TNTM_bow(AbstractModel):
     """
 
     self.embedding_model_name_vocabulary = embedding_model_name_vocabulary
-    self.n_topics = n_topics
+    self.n_topics = num_topics
     self.save_path = save_path
     self.n_dims = n_dims
     self.n_hidden_units = n_hidden_units

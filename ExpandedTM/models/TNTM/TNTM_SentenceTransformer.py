@@ -1,38 +1,11 @@
 from multiprocessing.process import parent_process
 import torch
 from torch import nn
-import sys
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import pickle
-import sklearn
-
-from torch.utils.data import TensorDataset, DataLoader
-import torch.nn.functional as nnf
-import collections
 from collections import namedtuple
-from tqdm import tqdm
-
-from sklearn.datasets import fetch_20newsgroups
-import pickle
-from tqdm import tqdm
-import pandas as pd
 import numpy as np
-
-
-
-from torch.distributions.multivariate_normal import MultivariateNormal
-from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
-from torch.distributions.normal import Normal
-from torch.distributions.independent import Independent
-
-import octis
-from octis.evaluation_metrics.coherence_metrics import Coherence
-from octis.evaluation_metrics.diversity_metrics import TopicDiversity
-
-import Initialization as init
-import TNTM_inference
+import ExpandedTM.models.TNTM.TNTM_inference as TNTM_inference
+import ExpandedTM.models.TNTM.Initialization as init
 
 
 class TNTM_SentenceTransformer():
@@ -40,7 +13,7 @@ class TNTM_SentenceTransformer():
     self,
     embedding_model_name_vocabulary: str = "all-MiniLM-L6-v2",
     embedding_model_name_documents: str = "all-MiniLM-L6-v2",
-    n_topics: int = 20,
+    num_topics: int = 20,
     save_path: str = None,
     n_dims: int = 11,
     n_hidden_units: int = 200,
@@ -87,7 +60,7 @@ class TNTM_SentenceTransformer():
     self.embedding_model_name_vocabulary = embedding_model_name_vocabulary
     self.embedding_model_name_documents = embedding_model_name_documents
 
-    self.n_topics = n_topics
+    self.n_topics = num_topics
     self.save_path = save_path
     self.n_dims = n_dims
     self.n_hidden_units = n_hidden_units
