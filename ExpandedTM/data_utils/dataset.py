@@ -5,25 +5,24 @@ from sentence_transformers import SentenceTransformer
 import pandas as pd
 import re
 from octis.preprocessing.preprocessing import Preprocessing
-
-
+import numpy as np
 import os
 import pickle
-import pandas as pd
 
 
 class TMDataset(OCTISDataset):
     def __init__(self):
         super().__init__()
 
-    def fetch_dataset(self, name):
+    def fetch_dataset(self, name, dataset_path=None):
         # Check if the path is relative to the package datasets
         self.name = name
-        package_dataset_path = self.get_package_dataset_path(name)
+        if dataset_path is None:
+            dataset_path = self.get_package_dataset_path(name)
 
-        if os.path.exists(package_dataset_path):
+        if os.path.exists(dataset_path):
             # If the dataset exists in the package, load it from there
-            super().load_custom_dataset_from_folder(package_dataset_path)
+            super().load_custom_dataset_from_folder(dataset_path)
         else:
             # Otherwise, load it from the given path
             super().fetch_dataset(name)
@@ -57,18 +56,30 @@ class TMDataset(OCTISDataset):
         dataset_path = os.path.join(my_package_dir, "pre_embedded_datasets", name)
         return dataset_path
 
-    def get_embeddings(self, embedding_model_name):
+    def get_embeddings(
+        self, embedding_model_name, path: str = None, file_name: str = None
+    ):
         # Construct the dataset folder path
-        dataset_folder = self.get_package_embeddings_path(self.name)
+        if path is not None:
+            dataset_folder = path
+        else:
+            dataset_folder = self.get_package_embeddings_path(self.name)
 
         # Ensure the dataset folder exists or create it if it doesn't
         os.makedirs(dataset_folder, exist_ok=True)
 
-        # Construct the embeddings file path
-        embeddings_file = os.path.join(
-            dataset_folder,
-            f"{self.name}_embeddings_{embedding_model_name}.pkl",
-        )
+        if file_name is not None:
+            # Construct the embeddings file path
+            embeddings_file = os.path.join(
+                dataset_folder,
+                file_name,
+            )
+        else:
+            # Construct the embeddings file path
+            embeddings_file = os.path.join(
+                dataset_folder,
+                f"{self.name}_embeddings_{embedding_model_name}.pkl",
+            )
 
         self.get_dataframe()
 
@@ -124,10 +135,14 @@ class TMDataset(OCTISDataset):
                 print(
                     "You have not specified any labels. The dataset will be created without labels"
                 )
-            labels = data[label_column].tolist() if label_column else None
+            labels = (
+                data[label_column].tolist()
+                if label_column
+                else np.repeat(None, len(documents)).to_list()
+            )
         elif isinstance(data, list):  # Assuming data is a list of documents
             documents = [self.clean_text(doc) for doc in data]
-            labels = None
+            labels = np.repeat(None, len(documents)).to_list()
         else:
             raise TypeError("data must be a pandas DataFrame or a list of documents")
 

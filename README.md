@@ -27,6 +27,18 @@ Available (Additional) Metrics
 | NPMI                | Classical NPMi coherence computed on the scource corpus.                                                                                                               |
 
 
+
+
+Available Datasets
+=================
+
+| **Name**             | **Description**                                         |
+| -------------------- | ------------------------------------------------------- |
+| Spotify              | Random subset of Spotify song lyrics.                   |
+| Reuters              | Standard Reuters dataset preprocessed for octis format. |
+| Spotify_most_popular | Spotify lyrics of most popular songs.                   |
+| Poliblogs            | Standard Poliblogs dataset.                             |
+
 ## Usage
 
 To use these models, follow the steps below:
