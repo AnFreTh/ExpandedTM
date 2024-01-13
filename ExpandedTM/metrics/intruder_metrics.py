@@ -431,3 +431,127 @@ class INT(AbstractMetric):
             self.embeddings = None
 
         return float(np.mean(list(self.score_per_topic(model_output).values())))
+
+
+class ISH(AbstractMetric):
+    """
+    For each topic, draw several intruder words that are not from the same topic by first selecting some topics that are not the specific topic and
+    then selecting one word from each of those topics.
+    The embedding intruder distance to mean is then calculated as the average distance that each intruder word has to the mean of the other words.
+    """
+
+    def __init__(
+        self,
+        dataset,
+        n_intruders=1,
+        n_words=10,
+        metric_embedder=SentenceTransformer("paraphrase-MiniLM-L6-v2"),
+        emb_filename=None,
+        emb_path="Embeddings/",
+        expansion_path="Embeddings/",
+        expansion_filename=None,
+        expansion_word_list=None,
+    ):
+        """
+        Initializes the ISH object with a dataset, number of intruders, number of words,
+        embedding model, and paths for storing embeddings.
+
+        Parameters:
+            dataset: The dataset to be used for ISIM calculation.
+            n_intruders (int, optional): The number of intruder words to draw for each topic. Defaults to 1.
+            n_words (int, optional): The number of top words to consider for each topic. Defaults to 10.
+            metric_embedder (SentenceTransformer, optional): The embedding model to use.
+            Defaults to SentenceTransformer("paraphrase-MiniLM-L6-v2").
+            emb_filename (str, optional): Filename to store embeddings. Defaults to None.
+            emb_path (str, optional): Path to store embeddings. Defaults to "Embeddings/".
+            expansion_path (str, optional): Path for expansion embeddings. Defaults to "Embeddings/".
+            expansion_filename (str, optional): Filename for expansion embeddings. Defaults to None.
+            expansion_word_list (list, optional): List of words for expansion. Defaults to None.
+        """
+
+        tw_emb = Embed_corpus(
+            dataset,
+            metric_embedder,
+            emb_filename=emb_filename,
+            emb_path=emb_path,
+        )
+        if expansion_word_list is not None:
+            tw_emb = Update_corpus_dic_list(
+                expansion_word_list,
+                tw_emb,
+                metric_embedder,
+                emb_filename=expansion_filename,
+                emb_path=expansion_path,
+            )
+
+        self.n_intruders = n_intruders
+        self.corpus_dict = tw_emb
+        self.n_words = n_words
+        self.embeddings = None
+        """
+        corpus_dict: dict that maps each word in the corpus to its embedding
+        n_words: number of top words to consider
+        """
+
+        self.n_intruders = n_intruders
+
+    def score(self, model_output, new_Embeddings=True):
+        if new_Embeddings:
+            self.embeddings = None
+        """
+        Calculate the score for all topics combined
+        """
+
+        return float(np.mean(list(self.score_per_topic(model_output).values())))
+
+    def score_per_topic(self, model_output, new_Embeddings=None):
+        if new_Embeddings:  # for this function, reuse embeddings per default
+            self.embeddings = None
+
+        topics_tw = model_output["topics"]
+
+        if self.embeddings is None:
+            emb_tw = Embed_topic(
+                topics_tw, self.corpus_dict, self.n_words
+            )  # embed the top words
+            emb_tw = np.dstack(emb_tw).transpose(2, 0, 1)[
+                :, : self.n_words, :
+            ]  # create tensor of size (n_topics, n_topwords, n_embedding_dims)
+            self.embeddings = emb_tw
+        else:
+            emb_tw = self.embeddings
+
+        score_topic_list = []
+        for idx, topic in enumerate(emb_tw):
+            mask = np.full(emb_tw.shape[0], True)  # mask out the current topic
+            mask[idx] = False
+
+            intruder_words_idx_topic = np.random.choice(
+                np.arange(len(emb_tw))[mask], size=self.n_intruders
+            )  # select self.n_intruders topics to get the intruder words from
+            intruder_words = emb_tw[intruder_words_idx_topic]
+
+            intruder_words_idx_word = np.random.choice(
+                np.arange(intruder_words.shape[1]), size=1
+            )  # select one intruder word from each topic
+            intruder_words = intruder_words[:, intruder_words_idx_word, :].squeeze()
+
+            topic_mean = np.mean(topic, axis=0)
+
+            topic_sims = cosine_similarity(
+                topic_mean.reshape(1, -1), intruder_words.reshape(1, -1)
+            )
+            score_topic_list.append(np.mean(topic_sims))
+
+        results = {}
+        ntopics = len(model_output["topics"])
+        topic_words = model_output["topics"]
+        for k in range(ntopics):
+            half_topic_words = topic_words[k][
+                : len(topic_words[k]) // 2
+            ]  # Take only the first half of the words
+            results[", ".join(half_topic_words)] = float(
+                np.around(np.array(score_topic_list)[k], 5)
+            )
+
+        return results  # return the mean score for each topic
