@@ -1,6 +1,6 @@
 dash==2.14.2
 datasets==2.16.0
-gensim==4.3.2
+gensim==4.2.0
 matplotlib==3.8.0
 networkx==3.2.1
 nltk==3.8.1
