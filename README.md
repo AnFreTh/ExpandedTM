@@ -6,25 +6,26 @@ The implemented models include CEDC, DCTE, KMeans, Top2Vec.
 Available Models
 =================
 
-| **Name** | **Implementation**                |
-| -------- | --------------------------------- |
-| CEDC     | Topics in the Haystack            |
-| DCTE     | Human in the Loop                 |
-| KMeansTM | Simple Kmeans followed by c-tfidf |
-
-
-
+| **Name**                                                                                                                                      | **Implementation**                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [CEDC](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1)     | Topics in the Haystack                                                  |
+| [DCTE](https://arxiv.org/pdf/2212.09422.pdf)                                                                                                  | Human in the Loop                                                       |
+| [KMeansTM](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1) | Simple Kmeans followed by c-tfidf                                       |
+| SomTM                                                                                                                                         | Self organizing map followed by c-tfidf                                 |
+| [CBC](https://ieeexplore.ieee.org/abstract/document/10066754)                                                                                 | Coherence based document clustering                                     |
+| TNTM_bow                                                                                                                                      | Transformer-Representation Neural Topic Model using bag-of-words        |
+| TNTM_SentenceTransformer                                                                                                                      | Transformer-Representation Neural Topic Model using SentenceTransformer |
 
 Available (Additional) Metrics
 =================
 
-| **Name**            | **Description**                                                                                                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ISIM                | Average cosine similarity of top words of a topic to an intruder word.                                                                                                 |
-| INT                 | For a given topic and a given intruder word, Intruder Accuracy is the fraction of top words to which the intruder has the least similar embedding among all top words. |
-| COH                 | Embedding Coherence                                                                                                                                                    |
-| Embedding Coherence | Cosine similarity between the centroid of the embeddings of the stopwords and the centroid of the topic.                                                               |
-| NPMI                | Classical NPMi coherence computed on the scource corpus.                                                                                                               |
+| **Name**                                                                                                                                                 | **Description**                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ISIM](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1)                | Average cosine similarity of top words of a topic to an intruder word.                                                                                                 |
+| [INT](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1)                 | For a given topic and a given intruder word, Intruder Accuracy is the fraction of top words to which the intruder has the least similar embedding among all top words. |
+| [COH](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1)                 | Embedding Coherence                                                                                                                                                    |
+| [Embedding Coherence](https://direct.mit.edu/coli/article/doi/10.1162/coli_a_00506/118990/Topics-in-the-Haystack-Enhancing-Topic-Quality?searchresult=1) | Cosine similarity between the centroid of the embeddings of the stopwords and the centroid of the topic.                                                               |
+| NPMI                                                                                                                                                     | Classical NPMi coherence computed on the scource corpus.                                                                                                               |
 
 
 
