@@ -1,5 +1,5 @@
 # ExpandedTM
-Python library for topic modeling with extended corpora
+Python library for topic modeling with extended corpora.
 The implemented models include CEDC, DCTE, KMeans, Top2Vec.
 
 
