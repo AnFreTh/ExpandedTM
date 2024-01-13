@@ -21,7 +21,27 @@ def get_top_tfidf_words_per_document(corpus, n=10):
 
 
 class DocumentCoherence:
+    """
+    A class for calculating the coherence between documents based on their top words.
+    This is achieved through the use of Normalized Pointwise Mutual Information (NPMI).
+
+    Attributes:
+        documents (DataFrame): DataFrame containing documents and their top words.
+        column (str): Column name in DataFrame that contains the top words for each document.
+        stopwords (set): Set of stopwords to exclude from analysis.
+        word_index (dict): Dictionary mapping each unique word to a unique index.
+        doc_word_matrix (csr_matrix): Sparse matrix representing the occurrence of words in documents.
+    """
+
     def __init__(self, documents, column="tfidf_top_words", stopwords=None):
+        """
+        Initializes the DocumentCoherence object with a DataFrame of documents.
+
+        Parameters:
+            documents (DataFrame): DataFrame containing documents and their top words.
+            column (str): The column name in the DataFrame that contains the top words for each document.
+            stopwords (list, optional): List of stopwords to exclude from analysis.
+        """
         self.documents = documents
         self.column = column
         self.stopwords = set(stopwords) if stopwords else set()

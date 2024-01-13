@@ -4,7 +4,6 @@ from octis.models.model import AbstractModel
 from sentence_transformers import SentenceTransformer
 import pandas as pd
 from ..utils.tf_idf import c_tf_idf, extract_tfidf_topics
-from yellowbrick.cluster import KElbowVisualizer
 from ..data_utils.dataset import TMDataset
 import numpy as np
 
@@ -32,8 +31,6 @@ class KmeansTM(AbstractModel):
         umap_args: dict = {},
         kmeans_args: dict = {},
         random_state: int = None,
-        optim: bool = False,
-        optim_range: list = [5, 25],
         embeddings_folder_path: str = None,
         embeddings_file_path: str = None,
     ):
@@ -47,7 +44,6 @@ class KmeansTM(AbstractModel):
             umap_args (dict): UMAP arguments. Defaults to an empty dict.
             kmeans_args (dict): KMeans arguments. Defaults to an empty dict.
             random_state (int): Random state for reproducibility. Defaults to None.
-            optim (bool): Enables optimization for the number of clusters. Defaults to False.
         """
         super().__init__()
         self.trained = False
@@ -66,20 +62,12 @@ class KmeansTM(AbstractModel):
         if random_state is not None:
             self.umap_args["random_state"] = random_state
         self.kmeans_args = kmeans_args
-        self.optim = optim
-        self.optim_range = optim_range
         self.embeddings_path = embeddings_folder_path
         self.embeddings_file_path = embeddings_file_path
 
         assert (
             isinstance(num_topics, int) and num_topics > 0
         ), "num_topics must be a positive integer."
-        assert (
-            isinstance(optim_range, list) and len(optim_range) == 2
-        ), "optim_range must be a list of two integers."
-        assert (
-            optim_range[0] < optim_range[1]
-        ), "optim_range must be in ascending order."
 
     def _prepare_data(self):
         """
@@ -97,13 +85,6 @@ class KmeansTM(AbstractModel):
         Applies K-Means clustering to the reduced embeddings.
         """
         try:
-            if self.optim:
-                visualizer = KElbowVisualizer(
-                    KMeans(), k=(self.optim_range[0], self.optim_range[1])
-                )
-                visualizer.fit(self.reduced_embeddings)
-                self.n_topics = visualizer.elbow_value_ or self.n_topics
-
             clustering_model = KMeans(n_clusters=self.n_topics, **self.kmeans_args)
             clustering_model.fit(self.reduced_embeddings)
             self.labels = clustering_model.labels_

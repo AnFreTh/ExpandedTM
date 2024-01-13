@@ -29,13 +29,24 @@ class SOMTM(AbstractModel):
         use_softmax: bool = True,
     ):
         """
-        Initialize the SOM
-        :param m: Number of rows in the SOM
-        :param n: Number of columns in the SOM
-        :param dim: Dimensionality of the training inputs
-        :param n_iterations: Number of iterations for training
-        :param lr: Initial learning rate
-        :param sigma: Initial neighborhood value
+        Initialize the Self-Organizing Map for Topic modeling (SOMTM) model.
+
+        Parameters:
+            m (int, optional): Number of rows in the SOM grid (default is None).
+            n (int, optional): Number of columns in the SOM grid (default is None).
+            dim (int, optional): Dimensionality of the training inputs (default is None).
+            embedding_model_name (str, optional): Name of the SentenceTransformer embedding model (default is "all-MiniLM-L6-v2").
+            n_iterations (int, optional): Number of iterations for training (default is 100).
+            batch_size (int, optional): Batch size for training (default is 128).
+            lr (float, optional): Initial learning rate (default is None, which sets it to 0.3).
+            sigma (float, optional): Initial neighborhood value (default is None, which sets it to max(m, n) / 2).
+            embeddings_folder_path (str, optional): Path to the folder containing precomputed embeddings (default is None).
+            embeddings_file_path (str, optional): Path to the precomputed embeddings file (default is None).
+            reduce_dim (bool, optional): Whether to reduce dimensionality (default is True).
+            reduced_dimension (int, optional): Reduced dimensionality (default is 16).
+            umap_args (dict, optional): Arguments for UMAP dimensionality reduction (default is {}).
+            use_softmax (bool, optional): Whether to use softmax for mapping (default is True).
+
         """
 
         super().__init__()

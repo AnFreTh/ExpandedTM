@@ -35,22 +35,26 @@ class CEDC(AbstractModel):
         umap_args: dict = {},
         random_state: int = None,
         gmm_args: dict = {},
-        embeddings_folder_path:str=None,
-        embeddings_file_path:str=None
+        embeddings_folder_path: str = None,
+        embeddings_file_path: str = None,
     ):
         """
         Initializes the CEDC model with specified hyperparameters, number of topics,
         embedding model, UMAP arguments, and additional options.
 
         Parameters:
-            hyperparameters (dict, optional): A dictionary containing model hyperparameters.
-                Defaults to None.
             num_topics (int, optional): The number of topics to identify in the dataset.
                 Defaults to 20.
-            embedding_model (SentenceTransformer, optional): The model used for generating
-                sentence embeddings. Defaults to SentenceTransformer("all-MiniLM-L6-v2").
-            umap_args (dict, optional): A dictionary containing arguments for UMAP.
+            embedding_model_name (str, optional): The name of the SentenceTransformer model
+                used for generating sentence embeddings. Defaults to "all-MiniLM-L6-v2".
+            umap_args (dict, optional): A dictionary containing arguments for UMAP dimensionality
+                reduction. Defaults to an empty dictionary.
+            random_state (int, optional): Random seed for UMAP (if provided). Defaults to None.
+            gmm_args (dict, optional): A dictionary containing arguments for the Gaussian Mixture Model.
+                Defaults to an empty dictionary.
+            embeddings_folder_path (str, optional): Path to the folder containing precomputed embeddings.
                 Defaults to None.
+            embeddings_file_path (str, optional): Path to the precomputed embeddings file. Defaults to None.
         """
         super().__init__()
         self.trained = False
@@ -94,7 +98,9 @@ class CEDC(AbstractModel):
             self.dataset, TMDataset
         ), "The dataset must be an instance of TMDataset."
 
-        self.embeddings = self.dataset.get_embeddings(self.embedding_model_name, self.embeddings_path, self.embeddings_file_path)
+        self.embeddings = self.dataset.get_embeddings(
+            self.embedding_model_name, self.embeddings_path, self.embeddings_file_path
+        )
         self.dataframe = self.dataset.dataframe
 
     def _clustering(self):
