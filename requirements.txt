@@ -17,4 +17,3 @@ setuptools==68.2.2
 tqdm==4.65.0
 umap_learn==0.5.4
 wordcloud==1.9.3
-yellowbrick==1.5
