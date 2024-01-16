@@ -48,10 +48,10 @@ These metrics provide insights into the performance of topic models and their ab
 
 The **Intruder Shift (ISH)** metric quantifies the shift in a topic's centroid when an intruder word is substituted. This process involves the following steps:
 
-1. Compute the unweighted centroid of a topic and denote it as $\tilde{\bm{\gamma}}_i$.
+1. Compute the unweighted centroid of a topic and denote it as $\tilde{\boldsymbol{\gamma}}_i$.
 2. Randomly select a word from that topic and replace it with a randomly selected word from a different topic.
-3. Recalculate the centroid of the resulting words and denote it as $\hat{\bm{\gamma}}_i$.
-4. Calculate the ISH score for a topic by averaging the cosine similarity between $\tilde{\bm{\gamma}}_i$ and $\hat{\bm{\gamma}}_i$ for all topics using the formula:
+3. Recalculate the centroid of the resulting words and denote it as $\hat{\boldsymbol{\gamma}}_i$.
+4. Calculate the ISH score for a topic by averaging the cosine similarity between $\tilde{\bm{\gamma}}_i$ and $\hat{\boldsymbol{\gamma}}_i$ for all topics using the formula:
 5. 
 ISH(T) = (1 / K) * Σ(sim(𝜃̃_i, 𝜃̂_i)), for i = 1 to K
 
