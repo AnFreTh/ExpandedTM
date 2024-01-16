@@ -21,6 +21,7 @@ To load one of the already preprocessed datasets as follows:
 
     ```python
    from ExpandedTM.data_utils import TMDataset
+   
    dataset = TMDataset()
    dataset.fetch_dataset("Spotify")
    ```
@@ -35,6 +36,7 @@ Otherwise, you can load a custom preprocessed dataset in the following way, by s
 
     ```python
    from ExpandedTM.data_utils import TMDataset
+
    dataset = TMDataset()
    dataset = dataset.create_load_save_dataset(my_data, "test",
         "..",
