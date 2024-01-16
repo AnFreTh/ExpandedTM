@@ -19,14 +19,15 @@ Load a preprocessed dataset
 
 To load one of the already preprocessed datasets as follows:
 
-    ```python
-   from ExpandedTM.data_utils import TMDataset
+
+```python
+    from ExpandedTM.data_utils import TMDataset
    
    dataset = TMDataset()
    dataset.fetch_dataset("Spotify")
-   ```
+```
 
-Just use one of the dataset names listed above. Note: it is case-sensitive!
+Just use one of the dataset names listed above or one of the datasets from octis. Note that they are case-sensitive.
 
 
 Load a custom preprocessed dataset
@@ -34,7 +35,7 @@ Load a custom preprocessed dataset
 
 Otherwise, you can load a custom preprocessed dataset in the following way, by simply using a pandas dataframe:
 
-    ```python
+```python
    from ExpandedTM.data_utils import TMDataset
 
    dataset = TMDataset()
@@ -43,5 +44,5 @@ Otherwise, you can load a custom preprocessed dataset in the following way, by s
         doc_column="Documents",
         label_column="Labels",
         )
-    ```
+```
 
