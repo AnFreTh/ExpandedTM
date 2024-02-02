@@ -34,12 +34,14 @@ Available (Additional) Metrics
 Available Datasets
 =================
 
-| **Name**             | **Description**                                         |
-| -------------------- | ------------------------------------------------------- |
-| Spotify              | Random subset of Spotify song lyrics.                   |
-| Reuters              | Standard Reuters dataset preprocessed for octis format. |
-| Spotify_most_popular | Spotify lyrics of most popular songs.                   |
-| Poliblogs            | Standard Poliblogs dataset.                             |
+| **Name**                  | **Description**                                         |
+| ------------------------- | ------------------------------------------------------- |
+| Spotify                   | Random subset of Spotify song lyrics.                   |
+| Reuters                   | Standard Reuters dataset preprocessed for octis format. |
+| Spotify_most_popular      | Spotify lyrics of most popular songs.                   |
+| Poliblogs                 | Standard Poliblogs dataset.                             |
+| Reddit_GME                | Filtered sample for "Gamestop" (GME) from the Subreddit "r/wallstreetbets". Sample is taken from the thread "What are your moves tomorrow?". It is covering the time around the GME short squeeze of 2021 |
+| Stocktwits_GME            | Filtered sample for "Gamestop" (GME) from Stocktwits. It is covering the time around the GME short squeeze of 2021 |
 
 ## Usage
 
