@@ -13,62 +13,33 @@ from sklearn.impute import SimpleImputer
 import pandas as pd
 
 
-class FeatureNN(torch.nn.Module):
-    """
-    A feature neural network module using PyTorch.
-
-    This class defines a neural network with customizable layers, activations,
-    and dropout for feature extraction and transformation.
-
-    Attributes:
-        layers (torch.nn.ModuleList): A list of layers in the neural network.
-        output_layer (torch.nn.Linear): The output layer of the neural network.
-        dropout (torch.nn.Dropout): Dropout layer to prevent overfitting.
-        activations (List[torch.nn.Module]): List of activation functions for each layer.
-
-    Args:
-        shallow_units (int): Number of units in the initial layer.
-        output_size (int, optional): Size of the output layer. Defaults to 1.
-        input_size (int, optional): Size of the input layer. Defaults to 1.
-        hidden_units (Tuple, optional): Tuple specifying the number of units in each hidden layer.
-        activations (List[torch.nn.Module], optional): List of activation functions to use for each layer. Defaults to [torch.nn.ReLU()].
-        dropout (float, optional): Dropout rate for regularization. Defaults to 0.3.
-    """
-
+class FeatureNN(nn.Module):
     def __init__(
         self,
-        shallow_units: int,
-        output_size: int = 1,
         input_size: int = 1,
-        hidden_units: Tuple = (),
-        activations: List = [torch.nn.ReLU()],
+        output_size: int = 1,
+        hidden_units: List[int] = None,
+        activation: nn.Module = nn.ReLU(),
         dropout: float = 0.3,
     ):
         super().__init__()
+        hidden_units = hidden_units or [64, 32]  # Default hidden units
 
-        # Define Layers
-        self.layers = torch.nn.ModuleList(
-            [
-                torch.nn.Linear(
-                    shallow_units if i == 0 else hidden_units[i - 1], hidden_units[i]
-                )
-                for i in range(len(hidden_units))
-            ]
-        )
+        layers = [nn.Linear(input_size, hidden_units[0]), activation]
+        for i in range(1, len(hidden_units)):
+            layers.extend(
+                [
+                    nn.Linear(hidden_units[i - 1], hidden_units[i]),
+                    activation,
+                    nn.Dropout(dropout),
+                ]
+            )
+        layers.append(nn.Linear(hidden_units[-1], output_size))
 
-        self.layers.insert(0, torch.nn.Linear(input_size, shallow_units))
-        self.output_layer = torch.nn.Linear(hidden_units[-1], output_size)
-
-        # Dropout and activation
-        self.dropout = torch.nn.Dropout(p=dropout)
-        self.activations = activations
+        self.model = nn.Sequential(*layers)
 
     def forward(self, x):
-        x = x.unsqueeze(1)
-        for i, layer in enumerate(self.layers):
-            x = self.activations[i](layer(x))
-            x = self.dropout(x)
-        return self.output_layer(x)
+        return self.model(x)
 
     def plot(self, ax=None):
         if ax is None:
@@ -101,67 +72,58 @@ class FeatureNN(torch.nn.Module):
             ax.scatter(x, y, color="gray", s=2, alpha=0.3)
 
 
-class NeuralAdditiveModel(torch.nn.Module):
+class NeuralAdditiveModel(nn.Module):
     def __init__(
         self,
         input_size: int,
         output_size: int,
-        shallow_units: int or List[int],  # Added shallow_units to the parameters
         hidden_units: List[int] = None,
         feature_dropout: float = 0.0,
         hidden_dropout: float = 0.3,
-        activations: List[torch.nn.Module] = [torch.nn.ReLU()],
+        activation: str = "relu",
         out_activation=None,
     ):
         super().__init__()
         self.input_size = input_size
-        self.out_activation = out_activation
+        self.hidden_units = hidden_units or [64, 32]  # Default hidden units
+        self.feature_dropout = nn.Dropout(p=feature_dropout)
+        self.bias = nn.Parameter(torch.zeros(output_size))
 
-        if isinstance(shallow_units, list):
-            assert (
-                len(shallow_units) == input_size
-            ), "shallow_units list must match input_size"
-        elif isinstance(shallow_units, int):
-            shallow_units = [shallow_units for _ in range(input_size)]
+        # Set up the activation function based on the string
+        activation_fn = self._get_activation_fn(activation)
 
-        hidden_units = hidden_units or [128, 64]
+        self.out_activation = (
+            out_activation if out_activation is not None else nn.Identity()
+        )
 
-        self.feature_nns = torch.nn.ModuleList(
+        # Create feature-specific networks using FeatureNN
+        self.feature_nns = nn.ModuleList(
             [
-                self._build_feature_nn(
-                    shallow_units[i],
-                    hidden_units,
-                    output_size,
-                    activations,
-                    hidden_dropout,
+                FeatureNN(
+                    input_size=1,  # Each feature-specific NN takes a single feature as input
+                    output_size=output_size,
+                    hidden_units=hidden_units,
+                    activation=activation_fn,
+                    dropout=hidden_dropout,
                 )
-                for i in range(input_size)
+                for _ in range(input_size)
             ]
         )
-        self.feature_dropout = torch.nn.Dropout(p=feature_dropout)
-        self.bias = torch.nn.Parameter(torch.zeros(output_size))
 
-    def _build_feature_nn(
-        self, shallow_unit, hidden_units, output_size, activations, dropout
-    ):
-        layers = [torch.nn.Linear(1, shallow_unit), activations[0]]
-        for i in range(len(hidden_units) - 1):
-            layers.append(torch.nn.Linear(hidden_units[i], hidden_units[i + 1]))
-            layers.append(
-                activations[i + 1] if i + 1 < len(activations) else activations[-1]
-            )
-            layers.append(torch.nn.Dropout(dropout))
-        layers.append(torch.nn.Linear(hidden_units[-1], output_size))
-        return torch.nn.Sequential(*layers)
+    def _get_activation_fn(self, activation):
+        if activation.lower() == "relu":
+            return nn.ReLU()
+        elif activation.lower() == "sigmoid":
+            return nn.Sigmoid()
+        elif activation.lower() == "tanh":
+            return nn.Tanh()
+        else:
+            raise ValueError(f"Unsupported activation function: {activation}")
 
     def forward(self, x):
-        feature_outputs = torch.cat(
-            [nn(x[:, i : i + 1]) for i, nn in enumerate(self.feature_nns)], dim=1
-        )
-        output = feature_outputs.sum(dim=1, keepdim=True) + self.bias
-        if self.out_activation is not None:
-            output = self.out_activation(output)
-        return output
+        feature_outputs = [nn(x[:, i : i + 1]) for i, nn in enumerate(self.feature_nns)]
+        output = torch.cat(feature_outputs, dim=1).sum(dim=1, keepdim=True) + self.bias
+        return self.out_activation(output)
 
     def plot(self):
         self.eval()
@@ -190,11 +152,16 @@ class DownstreamModel(pl.LightningModule):
     def __init__(
         self,
         trained_topic_model,
-        target_column,  # Specify the name of the target column
+        target_column,
         dataset=None,
         task="regression",
         batch_size=128,
         lr=0.0005,
+        hidden_units: List[int] = None,  # NeuralAdditiveModel parameters
+        feature_dropout: float = 0.0,
+        hidden_dropout: float = 0.3,
+        activation: str = "relu",
+        out_activation=None,
     ):
         super().__init__()
         self.trained_topic_model = trained_topic_model
@@ -217,7 +184,13 @@ class DownstreamModel(pl.LightningModule):
         self.combined_data = self.prepare_combined_data()
 
         # Define the NAM architecture here based on the shape of the combined data
-        self.model = self.define_nam_model()
+        self.model = self.define_nam_model(
+            hidden_units=hidden_units,
+            feature_dropout=feature_dropout,
+            hidden_dropout=hidden_dropout,
+            activation=activation,
+            out_activation=out_activation,
+        )
 
     def prepare_combined_data(self):
         # Preprocess structured data
@@ -304,16 +277,24 @@ class DownstreamModel(pl.LightningModule):
 
         return preprocessed_data
 
-    def define_nam_model(self):
-        # Define the NAM architecture
+    def define_nam_model(
+        self, hidden_units, feature_dropout, hidden_dropout, activation, out_activation
+    ):
         input_size = self.combined_data.shape[1] - 1  # Exclude target column
         output_size = (
             1
             if self.task == "regression"
             else len(self.combined_data[self.target_column].unique())
         )
-        model = nn.Sequential(
-            nn.Linear(input_size, 128), nn.ReLU(), nn.Linear(128, output_size)
+
+        model = NeuralAdditiveModel(
+            input_size=input_size,
+            output_size=output_size,
+            hidden_units=hidden_units,
+            feature_dropout=feature_dropout,
+            hidden_dropout=hidden_dropout,
+            activation=activation,
+            out_activation=out_activation,
         )
         return model
 
@@ -324,8 +305,36 @@ class DownstreamModel(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss_fn(y_hat, y)
-        self.log("train_loss", loss)
+        self.log(
+            "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        val_loss = self.loss_fn(y_hat, y)
+        self.log(
+            "val_loss",
+            val_loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        test_loss = self.loss_fn(y_hat, y)
+        self.log(
+            "test_loss",
+            test_loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+        )
 
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=self.lr)
@@ -354,3 +363,29 @@ class DownstreamModel(pl.LightningModule):
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.batch_size)
+
+    def plot(self):
+        self.eval()
+        with torch.no_grad():
+            if len(self.model.feature_nns) > 1:
+                fig, axes = plt.subplots(
+                    len(self.model.feature_nns), 1, figsize=(10, 7)
+                )
+                for i, ax in enumerate(axes.flat):
+                    component = self.model.feature_nns[i]
+                    component.plot(ax)
+            else:
+                self.feature_nns[0].plot()
+
+    def plot_data(self, x, y):
+        self.eval()
+        with torch.no_grad():
+            if len(self.model.feature_nns) > 1:
+                fig, axes = plt.subplots(
+                    len(self.model.feature_nns), 1, figsize=(10, 7)
+                )
+                for i, ax in enumerate(axes.flat):
+                    component = self.model.feature_nns[i]
+                    component.plot_data(ax, x[i], y)
+            else:
+                self.model.feature_nns[0].plot()
