@@ -8,6 +8,7 @@ from ..data_utils.dataset import TMDataset
 import numpy as np
 from itertools import product
 import umap.umap_ as umap
+from sklearn.preprocessing import OneHotEncoder
 
 
 class SOMTM(AbstractModel):
@@ -182,6 +183,13 @@ class SOMTM(AbstractModel):
             labels.append(bmu_index.item())  # Convert tensor to integer
         return labels
 
+    def _get_topic_document_matrix(self):
+        assert (
+            self.trained
+        ), "Model must be trained before accessing the topic-document matrix."
+        # Safely get the topic-document matrix with a default value of None if not found
+        return self.output.get("topic-document-matrix", None)
+
     def train_model(self, dataset, n_top_words: int = 10):
         """
         Trains the K-Means topic model on the provided dataset.
@@ -220,10 +228,21 @@ class SOMTM(AbstractModel):
         tfidf, count = c_tf_idf(docs_per_topic["text"].values, m=len(self.dataframe))
         topics = extract_tfidf_topics(tfidf, count, docs_per_topic, n=n_top_words)
 
+        one_hot_encoder = OneHotEncoder(
+            sparse=False
+        )  # Use sparse=False to get a dense array
+        predictions_one_hot = one_hot_encoder.fit_transform(
+            self.dataframe[["predictions"]]
+        )
+
+        # Transpose the one-hot encoded matrix to get shape (k, n)
+        topic_document_matrix = predictions_one_hot.T
+
         self.output = {
             "topics": [[word for word, _ in topics[key]] for key in topics],
             "topic-word-matrix": tfidf.T,
             "topic_dict": topics,
+            "topic-document-matrix": topic_document_matrix,  # Include the transposed one-hot encoded matrix
         }
         self.trained = True
         return self.output

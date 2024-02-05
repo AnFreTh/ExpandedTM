@@ -2,6 +2,7 @@ from octis.models.model import AbstractModel
 from ..data_utils.dataset import TMDataset
 import networkx as nx
 import community as community_louvain
+from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 from ..utils.tf_idf import c_tf_idf, extract_tfidf_topics
 from ..utils.cbc_utils import DocumentCoherence, get_top_tfidf_words_per_document
@@ -80,6 +81,13 @@ class CBC(AbstractModel):
         self.dataframe["tfidf_top_words"] = get_top_tfidf_words_per_document(
             self.dataframe["text"]
         )
+
+    def _get_topic_document_matrix(self):
+        assert (
+            self.trained
+        ), "Model must be trained before accessing the topic-document matrix."
+        # Safely get the topic-document matrix with a default value of None if not found
+        return self.output.get("topic-document-matrix", None)
 
     def train_model(self, dataset):
         """
@@ -162,10 +170,21 @@ class CBC(AbstractModel):
         tfidf, count = c_tf_idf(docs_per_topic["text"].values, m=len(self.dataframe))
         topics = extract_tfidf_topics(tfidf, count, docs_per_topic, n=10)
 
+        one_hot_encoder = OneHotEncoder(
+            sparse=False
+        )  # Use sparse=False to get a dense array
+        predictions_one_hot = one_hot_encoder.fit_transform(
+            self.dataframe[["predictions"]]
+        )
+
+        # Transpose the one-hot encoded matrix to get shape (k, n)
+        topic_document_matrix = predictions_one_hot.T
+
         self.output = {
             "topics": [[word for word, _ in topics[key]] for key in topics],
             "topic-word-matrix": tfidf.T,
             "topic_dict": topics,
+            "topic-document-matrix": topic_document_matrix,  # Include the transposed one-hot encoded matrix
         }
         self.trained = True
         return self.output
