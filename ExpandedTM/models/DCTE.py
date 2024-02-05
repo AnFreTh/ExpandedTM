@@ -1,6 +1,7 @@
 from setfit import SetFitModel, Trainer, TrainingArguments
 import pyarrow as pa
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
 from datasets import Dataset
 from sentence_transformers.losses import CosineSimilarityLoss
 from octis.models.model import AbstractModel
@@ -83,6 +84,13 @@ class DCTE(AbstractModel):
         self.train_ds = Dataset(pa.Table.from_pandas(train_df))
         self.val_ds = Dataset(pa.Table.from_pandas(val_df))
 
+    def _get_topic_document_matrix(self):
+        assert (
+            self.trained
+        ), "Model must be trained before accessing the topic-document matrix."
+        # Safely get the topic-document matrix with a default value of None if not found
+        return self.output.get("topic-document-matrix", None)
+
     def _get_topics(self, predict_df: pd.DataFrame, top_words: int):
         docs_per_topic = predict_df.groupby(["predictions"], as_index=False).agg(
             {"text": " ".join}
@@ -118,6 +126,14 @@ class DCTE(AbstractModel):
         res_dic["topics"] = words_list
         res_dic["topic-word-matrix"] = tfidf.T
         res_dic["topic_dict"] = topics
+        one_hot_encoder = OneHotEncoder(
+            sparse=False
+        )  # Use sparse=False to get a dense array
+        predictions_one_hot = one_hot_encoder.fit_transform(predict_df[["predictions"]])
+
+        # Transpose the one-hot encoded matrix to get shape (k, n)
+        topic_document_matrix = predictions_one_hot.T
+        res_dic["topic-document-matrix"] = topic_document_matrix
 
         return res_dic
 
@@ -194,8 +210,6 @@ class DCTE(AbstractModel):
         predict_df["predictions"] = self.labels
 
         self.output = self._get_topics(predict_df, n_top_words)
-        self.trained = True
-
         self.trained = True
 
         return self.output

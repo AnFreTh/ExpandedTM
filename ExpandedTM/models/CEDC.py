@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer
 from ..utils.topic_extraction import TopicExtractor
 from ..utils.cleaning import clean_topics
 import pandas as pd
+import numpy as np
 from sklearn.mixture import GaussianMixture
 from ..data_utils.dataset import TMDataset
 
@@ -137,6 +138,13 @@ class CEDC(AbstractModel):
         except Exception as e:
             raise ValueError(f"Error in dimensionality reduction: {e}")
 
+    def _get_topic_document_matrix(self):
+        assert (
+            self.trained
+        ), "Model must be trained before accessing the topic-document matrix."
+        # Safely get the topic-document matrix with a default value of None if not found
+        return self.output.get("topic-document-matrix", None)
+
     def train_model(
         self,
         dataset,
@@ -225,6 +233,7 @@ class CEDC(AbstractModel):
         self.output["topics"] = words_list
         self.output["topic-word-matrix"] = None
         self.output["topic_dict"] = topics
+        self.output["topic-document-matrix"] = np.array(self.soft_labels.T)
 
         self.trained = True
 

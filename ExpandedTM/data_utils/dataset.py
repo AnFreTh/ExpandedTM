@@ -127,13 +127,14 @@ class TMDataset(OCTISDataset):
         )
 
         return embeddings
-    
 
     def get_embeddings_vocabulary(
         self, embedding_model_name, path: str = None, file_name: str = None
     ):
         if self.name not in self.dataset_registry and path is None:
-            raise ValueError("Please specify a dataset path and a file path where to save the embedding files")
+            raise ValueError(
+                "Please specify a dataset path and a file path where to save the embedding files"
+            )
         # Construct the dataset folder path
         if path is not None:
             dataset_folder = path
@@ -169,16 +170,30 @@ class TMDataset(OCTISDataset):
                 pickle.dump(embeddings, file)
 
         return embeddings
-    
+
     def _generate_embeddings_vocabulary(self, embedding_model_name):
         # generate embeddings for the vocabulary
         self.embedding_model = SentenceTransformer(embedding_model_name)
         vocabulary = self.get_vocabulary()
-        embeddings = self.embedding_model.encode(
-            vocabulary
-        )
+        embeddings = self.embedding_model.encode(vocabulary)
 
         return embeddings
+
+    def get_structured_data(self, data: pd.DataFrame = None, dataset_path: str = None):
+        if dataset_path is None:
+            dataset_path = self.get_package_dataset_path(self.name)
+
+        document_indexes = []
+
+        if os.path.exists(dataset_path + "/indexes.txt"):
+            with open(dataset_path + "/indexes.txt", "r") as indexes_file:
+                for line in indexes_file:
+                    document_indexes.append(eval(line.strip()) / 2)
+
+            self.original_indexes = document_indexes
+
+        self.structured_data = data.loc[self.original_indexes]
+        return self.structured_data
 
     @staticmethod
     def clean_text(text):
