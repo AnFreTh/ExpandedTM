@@ -41,35 +41,42 @@ class FeatureNN(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-    def plot(self, ax=None):
+    def plot(self, feature_name, ax=None):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
         with torch.no_grad():
-            x_axis = torch.linspace(0, 1, 500).reshape(-1, 1)
+            x_axis = torch.linspace(-1, 1, 500).unsqueeze(1)  # Ensure input is 2D
 
+            # Plot the model's predictions for the specific feature
             ax.plot(
-                x_axis,
-                self.forward(x_axis).squeeze().reshape(-1, 1),
+                x_axis.numpy(),
+                self.forward(x_axis).numpy(),
                 linestyle="solid",
                 linewidth=1,
                 color="red",
             )
 
-    def plot_data(self, ax=None, x=None, y=None):
+            # Set the y-axis label to the feature name
+            ax.set_ylabel(feature_name)
+
+    def plot_data(self, x, y, feature_name, ax=None):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
         with torch.no_grad():
-            x_axis = torch.linspace(-1, 1, 500).reshape(-1, 1)
+            x_axis = torch.linspace(-1, 1, 500).unsqueeze(1)
 
+            # Plot the model's predictions and actual data points for the specific feature
             ax.plot(
-                x_axis,
-                self.forward(x_axis).squeeze().reshape(-1, 1),
+                x_axis.numpy(),
+                self.forward(x_axis).numpy(),
                 linestyle="solid",
                 linewidth=1,
                 color="red",
             )
-
             ax.scatter(x, y, color="gray", s=2, alpha=0.3)
+
+            # Set the y-axis label to the feature name
+            ax.set_ylabel(feature_name)
 
 
 class NeuralAdditiveModel(nn.Module):
@@ -154,6 +161,7 @@ class DownstreamModel(pl.LightningModule):
         trained_topic_model,
         target_column,
         dataset=None,
+        structured_data=None,
         task="regression",
         batch_size=128,
         lr=0.0005,
@@ -175,9 +183,7 @@ class DownstreamModel(pl.LightningModule):
                 self.trained_topic_model.dataset.get_structured_data()
             )
         else:
-            self.structured_data = self.trained_topic_model.dataset.get_structured_data(
-                data=dataset
-            )
+            self.structured_data = dataset.get_structured_data(data=structured_data)
         self.target_column = target_column
 
         # Combine topic probabilities with structured data
@@ -198,19 +204,16 @@ class DownstreamModel(pl.LightningModule):
             self.structured_data
         )
 
-        # Check if soft labels are available
-        if (
-            hasattr(self.trained_topic_model, "soft_labels")
-            and not self.trained_topic_model.soft_labels.empty
-        ):
-            topic_probabilities = self.trained_topic_model.soft_labels
-        else:
-            # Use hard labels and convert them to a one-hot encoded format
-            encoder = OneHotEncoder(sparse=False)
-            hard_labels = self.trained_topic_model.labels.reshape(
-                -1, 1
-            )  # Ensure it's a 2D array for OneHotEncoder
-            topic_probabilities = pd.DataFrame(encoder.fit_transform(hard_labels))
+        # Assert that trained_topic_model has the _get_topic_document_matrix method
+        assert hasattr(
+            self.trained_topic_model, "_get_topic_document_matrix"
+        ), "trained_topic_model must have a method called _get_topic_document_matrix."
+
+        # Use _get_topic_document_matrix function to get the topic-document matrix
+        topic_document_matrix = self.trained_topic_model._get_topic_document_matrix()
+
+        # Convert the matrix to a DataFrame and transpose it to shape (n, k)
+        topic_probabilities = pd.DataFrame(topic_document_matrix).transpose()
 
         # Combine the preprocessed structured data with the topic probabilities
         combined_df = pd.concat(
@@ -222,6 +225,8 @@ class DownstreamModel(pl.LightningModule):
             [col for col in combined_df.columns if col != self.target_column]
             + [self.target_column]
         ]
+
+        combined_df = combined_df.dropna()
 
         return combined_df
 
@@ -364,28 +369,22 @@ class DownstreamModel(pl.LightningModule):
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.batch_size)
 
-    def plot(self):
-        self.eval()
-        with torch.no_grad():
-            if len(self.model.feature_nns) > 1:
-                fig, axes = plt.subplots(
-                    len(self.model.feature_nns), 1, figsize=(10, 7)
-                )
-                for i, ax in enumerate(axes.flat):
-                    component = self.model.feature_nns[i]
-                    component.plot(ax)
-            else:
-                self.feature_nns[0].plot()
+    def get_feature_names(self):
+        # Assuming the last column of combined_data is the target, and all other columns are features
+        return self.combined_data.columns[:-1].tolist()
 
-    def plot_data(self, x, y):
-        self.eval()
-        with torch.no_grad():
-            if len(self.model.feature_nns) > 1:
-                fig, axes = plt.subplots(
-                    len(self.model.feature_nns), 1, figsize=(10, 7)
-                )
-                for i, ax in enumerate(axes.flat):
-                    component = self.model.feature_nns[i]
-                    component.plot_data(ax, x[i], y)
-            else:
-                self.model.feature_nns[0].plot()
+    def plot_feature_nns(self):
+        feature_names = self.get_feature_names()  # Retrieve feature names
+        num_features = len(self.model.feature_nns)
+
+        fig, axs = plt.subplots(num_features, 1, figsize=(10, num_features * 2))
+
+        for i, feature_nn in enumerate(self.model.feature_nns):
+            ax = axs[i] if num_features > 1 else axs
+            feature_nn.plot(
+                feature_names[i], ax=ax
+            )  # Pass the feature name to the plot method
+            ax.set_title(f"Feature: {feature_names[i]}")
+
+        plt.tight_layout()
+        plt.show()
