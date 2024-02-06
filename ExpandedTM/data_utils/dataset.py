@@ -183,6 +183,10 @@ class TMDataset(OCTISDataset):
         if dataset_path is None:
             dataset_path = self.get_package_dataset_path(self.name)
 
+        if data is None:
+            dataset_path = self.get_package_dataset_path(self.name)
+            data = pd.read_csv(f"{dataset_path}/{self.name}_data.csv")
+
         document_indexes = []
 
         if os.path.exists(dataset_path + "/indexes.txt"):
@@ -239,6 +243,10 @@ class TMDataset(OCTISDataset):
         documents_path = f"{save_dir}/{dataset_name}_corpus.txt"
         labels_path = f"{save_dir}/{dataset_name}_labels.txt"
 
+        # Drop the doc_column and save the DataFrame without it
+        data_without_doc_column = data.drop(columns=[doc_column])
+        csv_path = f"{save_dir}/{dataset_name}/data.csv"
+
         with open(documents_path, "w", encoding=encoding, errors="replace") as file:
             for doc in documents:
                 file.write(doc + "\n")
@@ -256,6 +264,8 @@ class TMDataset(OCTISDataset):
 
         # Save the preprocessed dataset
         dataset.save(f"{save_dir}/{dataset_name}")
+
+        data_without_doc_column.to_csv(csv_path, index=False, encoding=encoding)
 
         return dataset
 
