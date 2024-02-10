@@ -1,9 +1,17 @@
-# ExpandedTM
-Multiple topic model/document clustering and subsequent topic extraction models are available in ExpandedTM.
+# STREAM
+Multiple topic model/document clustering and subsequent topic extraction models are available in STREAM.
 All models are kept conceptually simple and offer easy and fast computation. All are heavily drawing from [Sentence Transformers](https://arxiv.org/pdf/1908.10084.pdf). So if you use any of our models in a scientific poublication be sure to reference the used transformer model as well as the used model from the given links below:
 
 ## Available Models
 ================
+
+
+### WordCluTM
+----
+[WordCluTM](https://arxiv.org/abs/2004.14914)    
+
+Follows a simple word clustering approach based on Word2Vec.
+We use the GMM approach introduced [Sia et al.](https://arxiv.org/abs/2004.14914) and get the doucment-topic-matrices by averaging over the topic words present in each document.
 
 ### CEDC
 ----
@@ -46,15 +54,6 @@ A simple models based on Self organizing maps ([SOM in NLP](https://www.research
 
 An approach that completely works without document embeddings. This model leverages widely used coherence scores by integrating them into a novel document-level clustering approach that uses keyword extraction methods for small to medium sized datasets. The metric by which most topic extraction methods optimize their hyperparameters is thus optimized during clustering, resulting in coherent clusters. Moreover, unlike traditional methods, the number of extracted topics or clusters does not need to be determined in advance, saving an additional optimization step and a time- and computationally-intensive grid search. This implementation uses the louvain algorithm to create the clusters.
 
-### TNTM_bow
---------
-
-tbd
-
-### TNTM_SentenceTransformer
-------------------------
-
-tbd
 
 
 
