@@ -2,47 +2,87 @@ import unittest
 from unittest.mock import patch, MagicMock
 import numpy as np
 from ExpandedTM.models.WordCluTM import WordCluTM
-from ExpandedTM.data_utils.dataset import TMDataset
+from ExpandedTM.data_utils.dataset import (
+    TMDataset,
+)
+import string
+import random
+import pandas as pd  # Adjust the import according to your package structure
 
 
 class TestWordCluTM(unittest.TestCase):
+
     def setUp(self):
-        # Create a mock dataset
+        # Initialize your WordCluTM model with default or specific parameters
+        self.model = WordCluTM(
+            num_topics=10, vector_size=50, window=5, min_count=1, workers=2
+        )
+
+        # Create a mock dataset, assuming your dataset.get_corpus() returns a list of tokenized sentences
         self.mock_dataset = MagicMock(spec=TMDataset)
-        # Generate mock corpus
+        # Generate random words and create a dataframe
+        random_texts = [
+            "sample text " + "".join(random.choices(string.ascii_lowercase, k=250))
+            for _ in range(50)
+        ]
+        self.mock_dataset.dataframe = pd.DataFrame({"text": random_texts})
+        # Generate a mock vocabulary
+        self.mock_dataset.get_vocabulary.return_value = list(
+            set([word for word in random_texts])
+        )
         self.mock_dataset.get_corpus.return_value = [
             ["word1", "word2", "word3"],
-            ["word4", "word5", "word6"],
-            # Add more mock sentences as needed
+            ["word4", "word5"],
         ]
-        # Generate a mock dataframe
-        self.mock_dataset.get_dataframe.return_value = MagicMock()
-        self.mock_dataset.get_dataframe.return_value.dataframe = MagicMock()
 
-        # Initialize the WordCluTM model
-        self.model = WordCluTM(num_topics=10)
+    @patch("your_package_path.WordCluTM.umap.UMAP")  # Adjust the import path
+    def test_dim_reduction(self, mock_umap):
+        # Mock UMAP fit_transform method to return a predetermined value
+        mock_reducer = MagicMock()
+        mock_reducer.fit_transform.return_value = np.random.rand(
+            10, 7
+        )  # Assuming 10 words, reduced to 7 dimensions
+        mock_umap.return_value = mock_reducer
 
-    def test_train_word2vec(self):
-        # Test Word2Vec training
-        sentences = self.mock_dataset.get_corpus()
-        self.model.train_word2vec(sentences)
-        self.assertIsNotNone(self.model.word2vec_model)
+        # Call _dim_reduction with a dummy embeddings array
+        dummy_embeddings = np.random.rand(
+            10, 50
+        )  # Assuming 10 words, 50-dimensional embeddings
+        reduced_embeddings = self.model._dim_reduction(dummy_embeddings)
 
-    def test_train_model(self, mock_clustering, mock_dim_reduction):
-        # Mock _dim_reduction to return reduced embeddings
-        mock_dim_reduction.return_value = np.random.rand(3, 3)
-        # Mock _clustering to return labels
-        mock_clustering.return_value = (np.random.rand(3, 3), np.array([0, 1, 2]))
+        # Assertions
+        mock_umap.assert_called_once_with(**self.model.umap_args)
+        mock_reducer.fit_transform.assert_called_once_with(dummy_embeddings)
+        self.assertEqual(
+            reduced_embeddings.shape, (10, 7)
+        )  # Check if the dimensionality reduction output shape is correct
 
-        # Run the training process
-        output = self.model.train_model(self.mock_dataset)
+    @patch("your_package_path.WordCluTM.GaussianMixture")  # Adjust the import path
+    def test_clustering(self, mock_gmm):
+        # Mock GaussianMixture and its methods
+        mock_gmm_instance = MagicMock()
+        mock_gmm_instance.predict_proba.return_value = np.random.rand(
+            10, self.model.n_topics
+        )  # Soft labels
+        mock_gmm_instance.predict.return_value = np.random.randint(
+            0, self.model.n_topics, 10
+        )  # Hard labels
+        mock_gmm.return_value = mock_gmm_instance
 
-        # Add assertions here to validate the output of the training process
-        # For example:
-        self.assertIn("topics", output)
-        self.assertIn("topic-word-matrix", output)
-        self.assertIn("topic_dict", output)
-        self.assertIn("topic-document-matrix", output)
+        # Assuming reduced_embeddings is a required attribute for _clustering
+        self.model.reduced_embeddings = np.random.rand(
+            10, 7
+        )  # Dummy reduced embeddings
+
+        soft_labels, labels = self.model._clustering()
+
+        # Assertions
+        mock_gmm.assert_called_once_with(**self.model.gmm_args)
+        mock_gmm_instance.fit.assert_called_once_with(self.model.reduced_embeddings)
+        self.assertEqual(
+            soft_labels.shape, (10, self.model.n_topics)
+        )  # Check soft labels shape
+        self.assertEqual(labels.shape, (10,))  # Check hard labels shape
 
 
 if __name__ == "__main__":

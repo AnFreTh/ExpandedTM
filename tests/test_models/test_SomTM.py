@@ -23,7 +23,7 @@ class TestSOMTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.SOMTM.umap.UMAP")
+    @patch("ExpandedTM.models.SOMTM.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Test dimensionality reduction
         self.model.dataset = self.mock_dataset
@@ -32,10 +32,7 @@ class TestSOMTM(unittest.TestCase):
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
 
-    @patch("umap.umap_.UMAP.fit_transform")
     def test_train_model(self, mock_umap_fit_transform):
-        mock_umap_fit_transform.return_value = np.random.rand(25, 15)
-
         output = self.model.train_model(self.mock_dataset)
 
         self.assertIn("topics", output)
