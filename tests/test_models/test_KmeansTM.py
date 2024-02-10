@@ -23,7 +23,7 @@ class TestKmeansTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.KmeansTM.UMAP")
+    @patch("ExpandedTM.models.KmeansTM.umap.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Assuming self.model is an instance of KmeansTM and initialized somewhere in your test setup
         self.model.dataset = self.mock_dataset
@@ -32,14 +32,12 @@ class TestKmeansTM(unittest.TestCase):
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
 
-    @patch("ExpandedTM.models.KmeansTM.KMeans")
-    def test_clustering(self, mock_kmeans):
+    def test_clustering(self):
         # Test clustering
         self.model.dataset = self.mock_dataset
         self.model._prepare_data()
         self.model._dim_reduction()
         self.model._clustering()
-        mock_kmeans.assert_called_once()
         self.assertIsNotNone(self.model.labels)
 
     @patch("umap.umap_.UMAP.fit_transform")

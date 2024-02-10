@@ -45,7 +45,7 @@ class TestCEDC(unittest.TestCase):
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
 
-    @patch("ExpandedTM.models.CEDC.GaussianMixture")
+    @patch("ExpandedTM.models.CEDC.GMM")
     def test_clustering(self, mock_gmm):
         # Test clustering
         self.model.dataset = self.mock_dataset

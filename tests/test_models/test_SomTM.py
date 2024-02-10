@@ -23,7 +23,7 @@ class TestSOMTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.SOMTM.UMAP")
+    @patch("ExpandedTM.models.SOMTM.umap.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Test dimensionality reduction
         self.model.dataset = self.mock_dataset
