@@ -8,12 +8,29 @@ import plotly.graph_objs as go
 import numpy as np
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-
-
 from scipy.spatial.distance import cosine
 
 
 def calculate_distances_to_other_topics(selected_topic_index, plot_df, model_output):
+    """
+    Calculate cosine distances between the selected topic and all other topics,
+    along with their top 3 words.
+
+    Parameters:
+    -----------
+    selected_topic_index : int
+        Index of the selected topic.
+    plot_df : pandas.DataFrame
+        DataFrame containing the positions of topics on the plot, with 'x' and 'y' columns.
+    model_output : dict
+        Output dictionary from the topic modeling model, containing topic information.
+
+    Returns:
+    --------
+    list of tuples
+        List of tuples containing the index of the topic, its cosine distance to the
+        selected topic, and the top 3 words associated with that topic.
+    """
     selected_topic_position = plot_df.iloc[selected_topic_index][["x", "y"]]
     distances = []
 
@@ -34,6 +51,25 @@ def calculate_distances_to_other_topics(selected_topic_index, plot_df, model_out
 
 
 def _visualize_topic_model_2d(model, reduce_first=False, reducer="umap", port=8050):
+    """
+    Visualize a topic model in 2D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
+
+    Parameters:
+    -----------
+    model : object
+        Topic modeling model object.
+    reduce_first : bool, optional
+        Whether to reduce dimensions of embeddings first (default is False).
+    reducer : str, optional
+        Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+    port : int, optional
+        Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+    --------
+    None
+        The function launches a Dash server to visualize the topic model.
+    """
     num_docs_per_topic = pd.Series(model.labels).value_counts().sort_index()
 
     # Extract top words for each topic with importance and format them vertically
@@ -197,6 +233,25 @@ def _visualize_topic_model_2d(model, reduce_first=False, reducer="umap", port=80
 
 
 def _visualize_topic_model_3d(model, reduce_first=False, reducer="umap", port=8050):
+    """
+    Visualize a topic model in 3D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
+
+    Parameters:
+    -----------
+    model : object
+        Topic modeling model object.
+    reduce_first : bool, optional
+        Whether to reduce dimensions of embeddings first (default is False).
+    reducer : str, optional
+        Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+    port : int, optional
+        Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+    --------
+    None
+        The function launches a Dash server to visualize the topic model.
+    """
     num_docs_per_topic = pd.Series(model.labels).value_counts().sort_index()
 
     # Extract top words for each topic with importance and format them vertically
@@ -362,6 +417,21 @@ def _visualize_topic_model_3d(model, reduce_first=False, reducer="umap", port=80
 
 
 def get_top_tfidf_words_per_document(corpus, n=10):
+    """
+    Extract top TF-IDF weighted words per document in the corpus.
+
+    Parameters:
+    -----------
+    corpus : list
+        List of documents (strings).
+    n : int, optional
+        Number of top words to extract per document (default is 10).
+
+    Returns:
+    --------
+    list of lists
+        List of lists containing top TF-IDF weighted words for each document.
+    """
     vectorizer = TfidfVectorizer(stop_words="english")
     X = vectorizer.fit_transform(corpus)
     feature_names = vectorizer.get_feature_names_out()
@@ -377,6 +447,23 @@ def get_top_tfidf_words_per_document(corpus, n=10):
 
 
 def _visualize_topics_2d(model, reducer="umap", port=8050):
+    """
+    Visualize topics in 2D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
+
+    Parameters:
+    -----------
+    model : object
+        Topic modeling model object.
+    reducer : str, optional
+        Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+    port : int, optional
+        Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+    --------
+    None
+        The function launches a Dash server to visualize the topic model.
+    """
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])
@@ -480,6 +567,23 @@ def _visualize_topics_2d(model, reducer="umap", port=8050):
 
 
 def _visualize_topics_3d(model, reducer="umap", port=8050):
+    """
+    Visualize topics in 3D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
+
+    Parameters:
+    -----------
+    model : object
+        Topic modeling model object.
+    reducer : str, optional
+        Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+    port : int, optional
+        Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+    --------
+    None
+        The function launches a Dash server to visualize the topic model.
+    """
     embeddings = model.embeddings
     labels = model.labels
     top_words_per_document = get_top_tfidf_words_per_document(model.dataframe["text"])

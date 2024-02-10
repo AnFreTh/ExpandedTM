@@ -1,16 +1,9 @@
 from gensim.models import Word2Vec
-from sklearn.cluster import KMeans
 import umap.umap_ as umap
 from octis.models.model import AbstractModel
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
-from ..utils.tf_idf import c_tf_idf, extract_tfidf_topics
-from ..data_utils.dataset import (
-    TMDataset,
-)
+from ..data_utils.dataset import TMDataset
 from ..utils.embedder import BaseEmbedder, GensimBackend
-from ..utils.topic_extraction import TopicExtractor
-from ..utils.cleaning import clean_topics
 from sklearn.mixture import GaussianMixture
 import pandas as pd
 
@@ -31,6 +24,19 @@ class WordCluTM(AbstractModel):
         gmm_args: dict = {},
         random_state: int = None,
     ):
+        """
+        Initialize the WordCluTM model.
+
+        Args:
+            num_topics (int): Number of topics.
+            vector_size (int): Dimensionality of the word vectors.
+            window (int): Maximum distance between the current and predicted word within a sentence.
+            min_count (int): Ignores all words with total frequency lower than this.
+            workers (int): Number of worker threads to train the Word2Vec model.
+            umap_args (dict): Arguments for UMAP dimensionality reduction.
+            gmm_args (dict): Arguments for Gaussian Mixture Model (GMM).
+            random_state (int): Random seed.
+        """
         super().__init__()
         self.n_topics = num_topics
         self.vector_size = vector_size
@@ -64,7 +70,10 @@ class WordCluTM(AbstractModel):
 
     def train_word2vec(self, sentences):
         """
-        Trains a Word2Vec model on the given sentences.
+        Train a Word2Vec model on the given sentences.
+
+        Args:
+            sentences (list): List of tokenized sentences.
         """
         # Initialize Word2Vec model
         self.word2vec_model = Word2Vec(
@@ -78,6 +87,12 @@ class WordCluTM(AbstractModel):
         self.base_embedder = BaseEmbedder(GensimBackend(self.word2vec_model.wv))
 
     def _clustering(self):
+        """
+        Perform clustering on the reduced embeddings.
+
+        Returns:
+            tuple: Soft labels and hard labels of the clusters.
+        """
         assert (
             hasattr(self, "reduced_embeddings") and self.reduced_embeddings is not None
         ), "Reduced embeddings must be generated before clustering."
@@ -96,11 +111,30 @@ class WordCluTM(AbstractModel):
             raise ValueError(f"Error in clustering: {e}")
 
     def _dim_reduction(self, embeddings):
+        """
+        Perform dimensionality reduction on the word embeddings.
+
+        Args:
+            embeddings (numpy.ndarray): Word embeddings.
+
+        Returns:
+            numpy.ndarray: Reduced embeddings.
+        """
         reducer = umap.UMAP(**self.umap_args)
         reduced_embeddings = reducer.fit_transform(embeddings)
         return reduced_embeddings
 
     def train_model(self, dataset, n_words=10):
+        """
+        Train the WordCluTM model.
+
+        Args:
+            dataset (TMDataset): Dataset instance.
+            n_words (int): Number of top words to include in each topic.
+
+        Returns:
+            dict: Output containing topics, topic-word matrix, topic dictionary, and topic-document matrix.
+        """
         assert isinstance(
             dataset, TMDataset
         ), "The dataset must be an instance of TMDataset."
@@ -159,10 +193,10 @@ class WordCluTM(AbstractModel):
             # Get the indices of the words sorted by their probability of belonging to this cluster, in descending order
             sorted_indices = np.argsort(self.labels[:, cluster_idx])[::-1]
 
-            # Get the top 10 words for this cluster based on the sorted indices
+            # Get the top n_words for this cluster based on the sorted indices
             top_words = [
                 (unique_words[i], self.labels[i, cluster_idx])
-                for i in sorted_indices[:10]
+                for i in sorted_indices[:n_words]
             ]
 
             # Store the top words and their probabilities in the dictionary

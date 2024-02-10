@@ -10,12 +10,20 @@ from ._interactive import (
 
 def visualize_topics_as_wordclouds(model, max_words=100):
     """
-    Generates word clouds for each topic in the model.
+    Visualize topics as word clouds.
 
-    Parameters:
-        model (KmeansTM): A trained instance of the KmeansTM model.
-        max_words (int): Maximum number of words to include in the word cloud.
+    Args:
+        model: Trained topic model.
+        max_words (int, optional): Maximum number of words to display in each word cloud (default is 100).
+
+    Raises:
+        AssertionError: If the model doesn't have the necessary output for topic visualization.
+
+    Returns:
+        None
+            This function displays word clouds for each topic.
     """
+
     assert (
         hasattr(model, "output") and "topic_dict" in model.output
     ), "Model must have been trained with topics extracted."
@@ -41,14 +49,19 @@ def visualize_topics_as_wordclouds(model, max_words=100):
 def visualize_topic_model(
     model, three_dim=False, reduce_first=False, reducer="umap", port=8050
 ):
-    """_summary_
+    """
+    Visualize a topic model in either 2D or 3D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
 
     Args:
-        model (AbstractModel): trained topic model
-        three_dim (bool, optional): whether to cisualize 3-dimensional or 2-dimensional. Defaults to False.
-        reduce_first (bool, optional): Whether the document embeddings are first dimensionality reduced and then the topical centroids are computed. Defaults to False.
-        reducer (str, optional): Which model is used to perform dimensionality reduction. Defaults to "umap".
-        port (int, optional): port of dash plot. Defaults to 8050.
+        model (AbstractModel): Trained topic model.
+        three_dim (bool, optional): Whether to visualize in 3D or 2D (default is False).
+        reduce_first (bool, optional): Whether to reduce dimensions of embeddings first and then compute topical centroids (default is False).
+        reducer (str, optional): Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+        port (int, optional): Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+        None
+            The function launches a Dash server to visualize the topic model.
     """
     assert (
         model.trained
@@ -61,13 +74,18 @@ def visualize_topic_model(
 
 
 def visualize_topics(model, three_dim=False, reducer="umap", port=8050):
-    """_summary_
+    """
+    Visualize topics in either 2D or 3D space using UMAP, t-SNE, or PCA dimensionality reduction techniques.
 
     Args:
-        model (AbstractModel): trained topic model
-        three_dim (bool, optional): whether to cisualize 3-dimensional or 2-dimensional. Defaults to False.
-        reducer (str, optional): Which model is used to perform dimensionality reduction. Defaults to "umap".
-        port (int, optional): port of dash plot. Defaults to 8050.
+        model (AbstractModel): Trained topic model.
+        three_dim (bool, optional): Whether to visualize in 3D or 2D (default is False).
+        reducer (str, optional): Dimensionality reduction technique to use, one of ['umap', 'tsne', 'pca'] (default is 'umap').
+        port (int, optional): Port number for running the visualization dashboard (default is 8050).
+
+    Returns:
+        None
+            The function launches a Dash server to visualize the topic model.
     """
 
     assert (

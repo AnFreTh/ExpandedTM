@@ -6,6 +6,16 @@ from scipy.sparse import csr_matrix
 
 
 def get_top_tfidf_words_per_document(corpus, n=10):
+    """
+    Get the top TF-IDF words per document in a corpus.
+
+    Args:
+        corpus (list): List of documents.
+        n (int, optional): Number of top words to retrieve per document (default is 10).
+
+    Returns:
+        list: A list of lists containing the top TF-IDF words for each document in the corpus.
+    """
     vectorizer = TfidfVectorizer(stop_words="english")
     X = vectorizer.fit_transform(corpus)
     feature_names = vectorizer.get_feature_names_out()
@@ -94,6 +104,12 @@ class DocumentCoherence:
         return npmi
 
     def calculate_document_coherence(self):
+        """
+        Calculate document coherence scores based on NP (Normalized Pointwise) Mutual Information (NPMI).
+
+        Returns:
+            pd.DataFrame: A DataFrame containing coherence scores between each pair of documents.
+        """
         n_documents = self.doc_word_matrix.shape[0]
         co_occurrences = self._calculate_co_occurrences()
         npmi_matrix = self._calculate_npmi(co_occurrences, n_documents)
