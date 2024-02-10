@@ -275,7 +275,7 @@ class DownstreamModel(pl.LightningModule):
         feature_names = numerical_cols.tolist() + list(
             preprocessor.named_transformers_["cat"]
             .named_steps["onehot"]
-            .get_feature_names(input_features=categorical_cols)
+            .get_feature_names_out(input_features=categorical_cols)
         )
 
         preprocessed_data.columns = feature_names
