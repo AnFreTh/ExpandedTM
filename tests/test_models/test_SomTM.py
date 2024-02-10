@@ -4,6 +4,7 @@ import string
 import random
 from ExpandedTM.models.som import SOMTM
 from ExpandedTM.data_utils.dataset import TMDataset
+import pandas as pd
 
 
 class TestSOMTM(unittest.TestCase):
@@ -14,19 +15,25 @@ class TestSOMTM(unittest.TestCase):
         self.n_documents = 50
 
         self.mock_dataset = MagicMock(spec=TMDataset)
+        # Prepare diverse labels and text data
+        labels = ["A", "B", "C", "D", "E"]
         text_data = [
             " ".join(
                 "".join(random.choices(string.ascii_lowercase, k=random.randint(1, 15)))
                 for _ in range(random.randint(5, 10))  # Each document has 5-10 words
             )
-            for _ in range(self.n_documents)  # 50 documents
+            for _ in range(50)  # 50 documents
         ]
+
+        label_data = [labels[i % len(labels)] for i in range(50)]
+        self.mock_dataset.dataframe = pd.DataFrame(
+            {"text": text_data, "label_text": label_data}
+        )
 
         # Set vocabulary and corpus
         self.mock_dataset.get_vocabulary = lambda: list(
             set(word for text in text_data for word in text.split())
         )
-
         self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]
 
         # Initialize the KmeansTM model

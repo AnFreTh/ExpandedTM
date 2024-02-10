@@ -57,32 +57,42 @@ class TestWordCluTM(unittest.TestCase):
             reduced_embeddings.shape, (10, 7)
         )  # Check if the dimensionality reduction output shape is correct
 
-    @patch("sklearn.mixture.GaussianMixture")  # Adjust the import path
-    def test_clustering(self, mock_gmm):
-        # Mock GaussianMixture and its methods
-        mock_gmm_instance = MagicMock()
-        mock_gmm_instance.predict_proba.return_value = np.random.rand(
-            10, self.model.n_topics
-        )  # Soft labels
-        mock_gmm_instance.predict.return_value = np.random.randint(
-            0, self.model.n_topics, 10
-        )  # Hard labels
-        mock_gmm.return_value = mock_gmm_instance
+    def test_train_word2vec(self):
+        # Train Word2Vec and check if embeddings are generated
+        self.model.train_word2vec(self.sentences)
+        self.assertIsNotNone(self.model.word2vec_model)
+        self.assertIn("word1", self.model.word2vec_model.wv.key_to_index)
 
-        # Assuming reduced_embeddings is a required attribute for _clustering
-        self.model.reduced_embeddings = np.random.rand(
-            10, 7
-        )  # Dummy reduced embeddings
+    def test_dim_reduction_and_clustering(self):
+        # Assuming train_word2vec and prepare_data have run successfully
+        self.model.train_word2vec(self.sentences)
+        word_embeddings = np.array(
+            [
+                self.model.word2vec_model.wv[word]
+                for word in self.model.word2vec_model.wv.index_to_key
+            ]
+        )
 
-        soft_labels, labels = self.model._clustering()
-
-        # Assertions
-        mock_gmm.assert_called_once_with(**self.model.gmm_args)
-        mock_gmm_instance.fit.assert_called_once_with(self.model.reduced_embeddings)
+        # Perform dimensionality reduction
+        reduced_embeddings = self.model._dim_reduction(word_embeddings)
         self.assertEqual(
-            soft_labels.shape, (10, self.model.n_topics)
-        )  # Check soft labels shape
-        self.assertEqual(labels.shape, (10,))  # Check hard labels shape
+            reduced_embeddings.shape,
+            (len(word_embeddings), self.model.umap_args["n_components"]),
+        )
+
+        # Perform clustering on the reduced embeddings
+        self.model.reduced_embeddings = reduced_embeddings
+        soft_labels, labels = self.model._clustering()
+        self.assertEqual(len(labels), len(word_embeddings))
+        self.assertEqual(soft_labels.shape, (len(word_embeddings), self.model.n_topics))
+
+    def test_train_model(self):
+        # Train the model on the dataset and check if output is generated as expected
+        output = self.model.train_model(self.dataset)
+        self.assertIn("topics", output)
+        self.assertIn("topic-word-matrix", output)
+        self.assertIn("topic-document-matrix", output)
+        self.assertTrue(self.model.trained)
 
 
 if __name__ == "__main__":
