@@ -23,7 +23,7 @@ class TestKmeansTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.KmeansTM.umap.UMAP")
+    @patch("umap.umap_.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Assuming self.model is an instance of KmeansTM and initialized somewhere in your test setup
         self.model.dataset = self.mock_dataset
