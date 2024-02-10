@@ -183,16 +183,36 @@ class TMDataset(OCTISDataset):
         if dataset_path is None:
             dataset_path = self.get_package_dataset_path(self.name)
 
+        if data is None:
+            data_csv_path = os.path.join(
+                dataset_path, "data.csv"
+            )  # Use os.path.join for constructing the path
+            data = pd.read_csv(data_csv_path)
+            print(data_csv_path)
+
         document_indexes = []
 
-        if os.path.exists(dataset_path + "/indexes.txt"):
-            with open(dataset_path + "/indexes.txt", "r") as indexes_file:
+        indexes_txt_path = os.path.join(
+            dataset_path, "indexes.txt"
+        )  # Use os.path.join for constructing the path
+        if os.path.exists(indexes_txt_path):
+            with open(indexes_txt_path, "r") as indexes_file:
                 for line in indexes_file:
-                    document_indexes.append(eval(line.strip()) / 2)
+                    # Ensure the evaluated expression from the file is treated as an integer for indexing
+                    document_indexes.append(
+                        int(eval(line.strip())) // 2
+                    )  # Use integer division for Python 3 compatibility
 
             self.original_indexes = document_indexes
 
-        self.structured_data = data.loc[self.original_indexes]
+        # Ensure that 'original_indexes' is defined before it's used
+        if hasattr(self, "original_indexes"):
+            self.structured_data = data.loc[self.original_indexes]
+        else:
+            # Handle the case where 'original_indexes' might not be set
+            # This could be setting 'structured_data' to some default value or raising an error
+            self.structured_data = None  # Or your preferred handling
+
         return self.structured_data
 
     @staticmethod
@@ -239,6 +259,10 @@ class TMDataset(OCTISDataset):
         documents_path = f"{save_dir}/{dataset_name}_corpus.txt"
         labels_path = f"{save_dir}/{dataset_name}_labels.txt"
 
+        # Drop the doc_column and save the DataFrame without it
+        data_without_doc_column = data.drop(columns=[doc_column])
+        csv_path = f"{save_dir}/{dataset_name}/data.csv"
+
         with open(documents_path, "w", encoding=encoding, errors="replace") as file:
             for doc in documents:
                 file.write(doc + "\n")
@@ -256,6 +280,8 @@ class TMDataset(OCTISDataset):
 
         # Save the preprocessed dataset
         dataset.save(f"{save_dir}/{dataset_name}")
+
+        data_without_doc_column.to_csv(csv_path, index=False, encoding=encoding)
 
         return dataset
 
