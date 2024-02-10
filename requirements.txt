@@ -17,5 +17,9 @@ setuptools==68.2.2
 tqdm==4.65.0
 umap_learn==0.5.4
 wordcloud==1.9.3
-networkx==3.2.1
+community==1.0.0b1
+networkx==2.8.4
 python_louvain==0.16
+pytorch_lightning==2.1.4
+torch==2.1.0
+

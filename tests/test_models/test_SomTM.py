@@ -2,11 +2,11 @@ import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import numpy as np
-from ExpandedTM.models.KmeansTM import KmeansTM
+from ExpandedTM.models.som import SOMTM
 from ExpandedTM.data_utils.dataset import TMDataset
 
 
-class TestKmeansTM(unittest.TestCase):
+class TestSOMTM(unittest.TestCase):
     def setUp(self):
         # Mock the TMDataset with initial embeddings of shape (25, 128)
         self.mock_dataset = MagicMock(spec=TMDataset)
@@ -14,7 +14,7 @@ class TestKmeansTM(unittest.TestCase):
         self.mock_dataset.dataframe = pd.DataFrame({"text": ["sample text"] * 25})
 
         # Initialize the KmeansTM model
-        self.model = KmeansTM(num_topics=10)
+        self.model = SOMTM(m=20, n=1, dim=384, n_iterations=3)
 
     def test_prepare_data(self):
         # Test data preparation
@@ -23,7 +23,7 @@ class TestKmeansTM(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.KmeansTM.umap.UMAP")
+    @patch("ExpandedTM.models.SOMTM.umap.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Test dimensionality reduction
         self.model.dataset = self.mock_dataset
@@ -31,16 +31,6 @@ class TestKmeansTM(unittest.TestCase):
         self.model._dim_reduction()
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
-
-    @patch("ExpandedTM.models.KMeansTM.KMeans")
-    def test_clustering(self, mock_kmeans):
-        # Test clustering
-        self.model.dataset = self.mock_dataset
-        self.model._prepare_data()
-        self.model._dim_reduction()
-        self.model._clustering()
-        mock_kmeans.assert_called_once()
-        self.assertIsNotNone(self.model.labels)
 
     @patch("umap.umap_.UMAP.fit_transform")
     def test_train_model(self, mock_umap_fit_transform):

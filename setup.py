@@ -19,5 +19,5 @@ setup(
     author="Anton Thielmann",
     author_email="anton.thielmann@tu-clausthal.de",
     url="https://github.com/AfThielmann/ExpandedTM",
-    python_requires=">=3.6, <=3.9",
+    python_requires=">=3.6",
 )
