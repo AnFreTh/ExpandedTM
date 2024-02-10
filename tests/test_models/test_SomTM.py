@@ -11,8 +11,8 @@ class TestSOMTM(unittest.TestCase):
     def setUp(self):
         # Mock the TMDataset with initial embeddings of shape (25, 128)
         self.n_topics = 10
-        self.n_words_per_topic = 10
-        self.n_documents = 50
+        self.n_words_per_topic = 23
+        self.n_documents = 500
 
         self.mock_dataset = MagicMock(spec=TMDataset)
         # Prepare diverse labels and text data
@@ -37,7 +37,7 @@ class TestSOMTM(unittest.TestCase):
         self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]
 
         # Initialize the KmeansTM model
-        self.model = SOMTM(m=20, n=1, dim=384, n_iterations=10)
+        self.model = SOMTM(m=5, n=2, dim=384, n_iterations=10)
 
     def test_prepare_data(self):
         # Test data preparation

@@ -59,13 +59,13 @@ class TestWordCluTM(unittest.TestCase):
 
     def test_train_word2vec(self):
         # Train Word2Vec and check if embeddings are generated
-        self.model.train_word2vec(self.sentences)
+        self.model.train_word2vec(self.mock_dataset.get_corpus())
         self.assertIsNotNone(self.model.word2vec_model)
         self.assertIn("word1", self.model.word2vec_model.wv.key_to_index)
 
     def test_dim_reduction_and_clustering(self):
         # Assuming train_word2vec and prepare_data have run successfully
-        self.model.train_word2vec(self.sentences)
+        self.model.train_word2vec(self.mock_dataset.get_corpus())
         word_embeddings = np.array(
             [
                 self.model.word2vec_model.wv[word]
@@ -88,7 +88,7 @@ class TestWordCluTM(unittest.TestCase):
 
     def test_train_model(self):
         # Train the model on the dataset and check if output is generated as expected
-        output = self.model.train_model(self.dataset)
+        output = self.model.train_model(self.mock_dataset)
         self.assertIn("topics", output)
         self.assertIn("topic-word-matrix", output)
         self.assertIn("topic-document-matrix", output)

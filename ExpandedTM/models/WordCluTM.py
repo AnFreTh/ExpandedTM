@@ -83,6 +83,14 @@ class WordCluTM(AbstractModel):
             workers=self.workers,
         )
 
+        # Build the vocabulary from the sentences
+        self.word2vec_model.build_vocab(sentences)
+
+        # Train the Word2Vec model
+        self.word2vec_model.train(
+            sentences, total_examples=len(sentences), epochs=self.word2vec_model.epochs
+        )
+
         # Initialize BaseEmbedder with GensimBackend
         self.base_embedder = BaseEmbedder(GensimBackend(self.word2vec_model.wv))
 
