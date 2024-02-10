@@ -36,7 +36,7 @@ class TestCEDC(unittest.TestCase):
         self.assertIsNotNone(self.model.embeddings)
         self.assertIsNotNone(self.model.dataframe)
 
-    @patch("ExpandedTM.models.CEDC.umap.UMAP")
+    @patch("umap.umap_.UMAP")
     def test_dim_reduction(self, mock_umap):
         # Test dimensionality reduction
         self.model.dataset = self.mock_dataset
@@ -45,7 +45,7 @@ class TestCEDC(unittest.TestCase):
         mock_umap.assert_called_once()
         self.assertIsNotNone(self.model.reduced_embeddings)
 
-    @patch("ExpandedTM.models.CEDC.GaussianMixture")
+    @patch("sklearn.mixture.GaussianMixture")
     def test_clustering(self, mock_gmm):
         # Test clustering
         self.model.dataset = self.mock_dataset

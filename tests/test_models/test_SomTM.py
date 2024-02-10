@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import pandas as pd
-import numpy as np
+import string
+import random
 from ExpandedTM.models.som import SOMTM
 from ExpandedTM.data_utils.dataset import TMDataset
 
@@ -9,12 +9,28 @@ from ExpandedTM.data_utils.dataset import TMDataset
 class TestSOMTM(unittest.TestCase):
     def setUp(self):
         # Mock the TMDataset with initial embeddings of shape (25, 128)
+        self.n_topics = 10
+        self.n_words_per_topic = 10
+        self.n_documents = 50
+
         self.mock_dataset = MagicMock(spec=TMDataset)
-        self.mock_dataset.get_embeddings.return_value = np.random.rand(25, 128)
-        self.mock_dataset.dataframe = pd.DataFrame({"text": ["sample text"] * 25})
+        text_data = [
+            " ".join(
+                "".join(random.choices(string.ascii_lowercase, k=random.randint(1, 15)))
+                for _ in range(random.randint(5, 10))  # Each document has 5-10 words
+            )
+            for _ in range(self.n_documents)  # 50 documents
+        ]
+
+        # Set vocabulary and corpus
+        self.mock_dataset.get_vocabulary = lambda: list(
+            set(word for text in text_data for word in text.split())
+        )
+
+        self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]
 
         # Initialize the KmeansTM model
-        self.model = SOMTM(m=20, n=1, dim=384, n_iterations=3)
+        self.model = SOMTM(m=20, n=1, dim=384, n_iterations=10)
 
     def test_prepare_data(self):
         # Test data preparation

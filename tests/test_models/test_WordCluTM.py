@@ -35,7 +35,7 @@ class TestWordCluTM(unittest.TestCase):
             ["word4", "word5"],
         ]
 
-    @patch("ExpandedTM.models.WordCluTM.umap.UMAP")  # Adjust the import path
+    @patch("umap.umap_.UMAP")  # Adjust the import path
     def test_dim_reduction(self, mock_umap):
         # Mock UMAP fit_transform method to return a predetermined value
         mock_reducer = MagicMock()
@@ -57,7 +57,7 @@ class TestWordCluTM(unittest.TestCase):
             reduced_embeddings.shape, (10, 7)
         )  # Check if the dimensionality reduction output shape is correct
 
-    @patch("ExpandedTM.models.WordCluTM.GMM")  # Adjust the import path
+    @patch("sklearn.mixture.GaussianMixture")  # Adjust the import path
     def test_clustering(self, mock_gmm):
         # Mock GaussianMixture and its methods
         mock_gmm_instance = MagicMock()
