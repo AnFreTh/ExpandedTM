@@ -13,9 +13,6 @@ class TestSomTM(unittest.TestCase):
         self.n_topics = 5
         self.n_words_per_topic = 10
         self.n_documents = 150
-        self.mock_dataset.get_embeddings.return_value = np.random.rand(
-            self.n_documents, 384
-        )
 
         self.mock_dataset = MagicMock(spec=TMDataset)
         text_data = [
@@ -29,6 +26,10 @@ class TestSomTM(unittest.TestCase):
         # Set vocabulary and corpus
         self.mock_dataset.get_vocabulary = lambda: list(
             set(word for text in text_data for word in text.split())
+        )
+
+        self.mock_dataset.get_embeddings.return_value = np.random.rand(
+            self.n_documents, 384
         )
 
         self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]

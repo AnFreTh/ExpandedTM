@@ -11,7 +11,7 @@ class TestWordCluTM(unittest.TestCase):
         self.n_words_per_topic = 10
         self.n_documents = 150
         dataset = TMDataset()
-        self.dataset = dataset.featch("BBC_News")
+        self.dataset = dataset.fetch("BBC_News")
 
         # Initialize the KmeansTM model
         self.model = WordCluTM(num_topics=5)
