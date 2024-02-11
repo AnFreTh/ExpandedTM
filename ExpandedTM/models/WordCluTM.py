@@ -68,7 +68,7 @@ class WordCluTM(AbstractModel):
                 "init_params": "kmeans",
             }
 
-    def train_word2vec(self, sentences):
+    def train_word2vec(self, sentences, epochs):
         """
         Train a Word2Vec model on the given sentences.
 
@@ -88,7 +88,7 @@ class WordCluTM(AbstractModel):
 
         # Train the Word2Vec model
         self.word2vec_model.train(
-            sentences, total_examples=len(sentences), epochs=self.word2vec_model.epochs
+            sentences, total_examples=len(sentences), epochs=epochs
         )
 
         # Initialize BaseEmbedder with GensimBackend
@@ -132,7 +132,7 @@ class WordCluTM(AbstractModel):
         reduced_embeddings = reducer.fit_transform(embeddings)
         return reduced_embeddings
 
-    def train_model(self, dataset, n_words=10):
+    def train_model(self, dataset, n_words=10, word2vec_epochs=100):
         """
         Train the WordCluTM model.
 
@@ -153,7 +153,7 @@ class WordCluTM(AbstractModel):
         self.dataset.get_dataframe()
         self.dataframe = self.dataset.dataframe
         print("--- Train Word2Vec ---")
-        self.train_word2vec(sentences)  # Train Word2Vec model
+        self.train_word2vec(sentences, word2vec_epochs)  # Train Word2Vec model
 
         print("--- Compute Word Embeddings ---")
         unique_words = list(set(word for sentence in sentences for word in sentence))
