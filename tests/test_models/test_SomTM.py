@@ -5,6 +5,7 @@ import random
 from ExpandedTM.models.som import SOMTM
 from ExpandedTM.data_utils.dataset import TMDataset
 import pandas as pd
+import numpy as np
 
 
 class TestSOMTM(unittest.TestCase):
@@ -35,6 +36,10 @@ class TestSOMTM(unittest.TestCase):
             set(word for text in text_data for word in text.split())
         )
         self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]
+
+        self.mock_dataset.get_embeddings.return_value = np.random.rand(
+            self.n_documents, 128
+        )
 
         # Initialize the KmeansTM model
         self.model = SOMTM(m=5, n=2, dim=384, n_iterations=10)
