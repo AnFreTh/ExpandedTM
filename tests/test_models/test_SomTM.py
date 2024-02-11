@@ -33,6 +33,7 @@ class TestSomTM(unittest.TestCase):
         )
 
         self.mock_dataset.get_corpus = lambda: [text.split() for text in text_data]
+        self.mock_dataset.dataframe = pd.DataFrame({"text": text_data})
 
         # Initialize the KmeansTM model
         self.model = SOMTM(m=self.n_topics, n=1, dim=384, n_iterations=5)

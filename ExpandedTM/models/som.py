@@ -129,7 +129,9 @@ class SOMTM(AbstractModel):
             )
 
             if self.use_softmax:
-                influence = torch.nn.Softmax(-distance_squares / (2 * rad_squared))
+                influence = torch.nn.functional.softmax(
+                    -distance_squares / (2 * rad_squared)
+                )
             else:
                 influence = torch.exp(-distance_squares / (2 * rad_squared))
 
